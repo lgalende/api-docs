@@ -1,0 +1,1151 @@
+openapi: 3.1.0
+info:
+  title: Mimic API
+  description: |-
+    This is a Mimic API specification.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1-rc
+externalDocs:
+  description: Find out more about Mimic
+  url: https://mimic.fi
+tags:
+  - name: General
+    description: General information
+  - name: Actions
+    description: >-
+      Compute EIP-712 data to sign via `POST /{action}/data`, then
+      submit the signature via `POST /{action}`
+  - name: Oracle queries
+    description: Read blockchain data
+paths:
+  /chains:
+    get:
+      tags:
+        - General
+      description: Get supported chains
+      responses:
+        '200':
+          description: List of supported chains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties: 
+                    chainId:
+                      type: integer
+                      example: 1
+                    name:
+                      type: string
+                      example: 'Ethereum'
+  /settlers:
+    get:
+      tags:
+        - General
+      description: Get supported settler addresses
+      responses:
+        '200':
+          description: List of settler addresses for all supported chains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Settler'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /settlers/{chainId}:
+    get:
+      tags:
+        - General
+      description: Get the settler address for a supported chain
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          description: Supported chain ID from /chains
+          schema:
+            $ref: '#/components/schemas/ChainId'
+      responses:
+        '200':
+          description: Settler address for the requested chain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settler'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /wallets:
+    post:
+      tags:
+        - Actions
+      description: Submit the signature to create the Safe wallet
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /wallets/data:
+    post:
+      tags:
+        - Actions
+      description: Computes EIP-712 data to be signed to create a new Safe wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - owner
+              properties:
+                chainId:
+                  type: integer
+                  description: Supported chain ID from /chains
+                  minimum: 1
+                  example: 1
+                owner:
+                  type: string
+                  description: Address that will own the Safe wallet
+                  example: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+                expectedAddress:
+                  type: string
+                  description: If you already created a wallet in another chain and you want the new wallet to have the same address
+                  example: '0x1234567890abcdef1234567890abcdef12345678'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create a new Safe wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /swaps:
+    post:
+      tags:
+        - Actions
+      description: Submit the signature to execute the swap
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /swaps/data:
+    post:
+      tags:
+        - Actions
+      description: >-
+        Computes EIP-712 data to be signed to create a swap operation (single-chain or cross-chain).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sourceChainId
+                - destinationChainId
+                - tokenIn
+                - amount
+                - tokenOut
+                - wallet
+                - slippageBps
+              properties:
+                sourceChainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID to swap the tokenIn from
+                destinationChainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID to receive the tokenOut on
+                tokenIn:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to swap from. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                amount:
+                  type: string
+                  description: Amount of tokenIn to swap, as a decimal string
+                  example: '0.05'
+                tokenOut:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to swap to. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address from where the funds will be pulled
+                slippageBps:
+                  type: integer
+                  description: Maximum slippage in tokenOut amount to accept, in basis points (e.g. 10000 = 100%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 50
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the tokenOut. Defaults to `wallet`.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the swap intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /dca:
+    post:
+      tags:
+        - Actions
+      description: Submit the signature to create the DCA strategy
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /dca/data:
+    post:
+      tags:
+        - Actions
+      description: >-
+        Computes EIP-712 data to be signed to create a recurring DCA
+        (dollar-cost averaging) strategy.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - tokenIn
+                - tokenOut
+                - amount
+                - wallet
+                - slippageBps
+                - frequency
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the swap will be executed
+                tokenIn:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to spend on each execution. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                tokenOut:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to accumulate. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                amount:
+                  type: string
+                  description: Amount of tokenIn to spend per execution, as a decimal string
+                  example: '10.5'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address from where the funds will be pulled
+                slippageBps:
+                  type: integer
+                  description: Slippage tolerance, in basis points (e.g. 50 = 0.50%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 50
+                frequency:
+                  type: string
+                  description: How often the DCA swap executes
+                  enum:
+                    - hourly
+                    - daily
+                    - weekly
+                    - monthly
+                  example: daily
+                endDate:
+                  allOf:
+                    - $ref: '#/components/schemas/Timestamp'
+                  description: Timestamp after which the strategy stops executing. Use 0 for no end date. Defaults to 0.
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the tokenOut. Defaults to `wallet`.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the DCA strategy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /stop-loss-take-profit:
+    post:
+      tags:
+        - Actions
+      description: Submit the signature to create the stop-loss / take-profit strategy
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /stop-loss-take-profit/data:
+    post:
+      tags:
+        - Actions
+      description: >-
+        Computes EIP-712 data to be signed to create a stop-loss / take-profit
+        strategy that monitors a token's price and swaps it when a threshold
+        is hit.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - tokenIn
+                - tokenOut
+                - wallet
+                - balanceBps
+                - slippageBps
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the position exists
+                tokenIn:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token being monitored and sold when a threshold is hit. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                tokenOut:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to receive after the swap. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                stopLossPrice:
+                  type: string
+                  description: >-
+                    USD price per tokenIn at or below which to trigger a
+                    stop-loss swap, e.g. "1500.00". Omit to disable. At least
+                    one of `stopLossPrice` or `takeProfitPrice` is required.
+                  example: '1500.00'
+                takeProfitPrice:
+                  type: string
+                  description: >-
+                    USD price per tokenIn at or above which to trigger a
+                    take-profit swap, e.g. "3000.00". Omit to disable. At
+                    least one of `stopLossPrice` or `takeProfitPrice` is
+                    required.
+                  example: '3000.00'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address whose balance is monitored and from where the funds will be pulled
+                balanceBps:
+                  type: integer
+                  description: >-
+                    Fraction of the tokenIn balance to swap, in basis points
+                    (e.g. 10000 = 100% (full balance), 3330 = 33.3%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 10000
+                slippageBps:
+                  type: integer
+                  description: Slippage tolerance for the swap, in basis points (e.g. 50 = 0.50%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 50
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the tokenOut. Defaults to `wallet`.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: >-
+            EIP-712 data to be signed to create the stop-loss / take-profit
+            strategy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /portfolio-rebalancing:
+    post:
+      tags:
+        - Actions
+      description: Submit the signature to create the portfolio rebalancing action or strategy
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /portfolio-rebalancing/data:
+    post:
+      tags:
+        - Actions
+      description: >-
+        Computes EIP-712 data to be signed to rebalance a portfolio to target
+        token allocations, either once or as a recurring strategy.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - allocations
+                - wallet
+                - slippageBps
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the portfolio exists
+                allocations:
+                  type: array
+                  description: >-
+                    Target allocation for each token. `targetBps` values must
+                    sum to 10000 (100%).
+                  minItems: 2
+                  items:
+                    type: object
+                    required:
+                      - token
+                      - targetBps
+                    properties:
+                      token:
+                        allOf:
+                          - $ref: '#/components/schemas/Address'
+                        description: Token address. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                      targetBps:
+                        type: integer
+                        description: Target share of the portfolio, in basis points (e.g. 50 = 0.50%)
+                        minimum: 0
+                        maximum: 10000
+                        example: 5000
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address whose portfolio is rebalanced — holds the funds
+                    and receives the output
+                slippageBps:
+                  type: integer
+                  description: Slippage tolerance for the swaps, in basis points (e.g. 50 = 0.50%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 50
+                driftToleranceBps:
+                  type: integer
+                  description: >-
+                    Minimum deviation from a token's target allocation required before it is rebalanced, in
+                    basis points (e.g. 10 = 0.10%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 100
+                frequency:
+                  type: string
+                  description: >-
+                    How often the portfolio is checked and rebalanced (if
+                    needed). Omit to rebalance once, immediately.
+                  enum:
+                    - hourly
+                    - daily
+                    - weekly
+                    - monthly
+                  example: weekly
+                endDate:
+                  allOf:
+                    - $ref: '#/components/schemas/Timestamp'
+                  description: >-
+                    Timestamp after which the strategy stops executing. Only
+                    relevant when `frequency` is set. Use 0 for no end date.
+                    Defaults to 0.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: >-
+            EIP-712 data to be signed to create the portfolio rebalancing
+            action or strategy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /lending-rebalancing:
+    post:
+      tags:
+        - Actions
+      description: Submit the signature to create the lending rebalancing action or strategy
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /lending-rebalancing/data:
+    post:
+      tags:
+        - Actions
+      description: >-
+        Computes EIP-712 data to be signed to move a deposit to the
+        highest-yielding of the selected lending markets, either once or as
+        a recurring strategy that keeps monitoring APY.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - token
+                - pools
+                - rotationThresholdBps
+                - wallet
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the rebalancing will take place
+                token:
+                  type: string
+                  description: Underlying token to lend
+                  enum:
+                    - USDC
+                    - USDT
+                pools:
+                  type: array
+                  description: DefiLlama pool ids to consider when rotating
+                  minItems: 1
+                  items:
+                    type: string
+                    example: 747c1d2a-c668-4682-b9f9-296708a3dd90
+                rotationThresholdBps:
+                  type: integer
+                  description: >-
+                    Minimum APY improvement required before
+                    rotating to a different pool, in basis points (e.g. 50 = 0.50%)
+                  minimum: 0
+                  example: 50
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address whose deposit is rebalanced — holds the funds and
+                    receives the output
+                startingPercentageBps:
+                  type: integer
+                  description: >-
+                    Percentage of the token balance to deposit on the first
+                    run, in basis points (e.g. 10000 = 100%). Defaults to 10000.
+                  minimum: 0
+                  maximum: 10000
+                  example: 10000
+                frequency:
+                  type: string
+                  description: >-
+                    How often APY is checked and the position is rebalanced
+                    (if needed). Omit to rebalance once, immediately.
+                  enum:
+                    - hourly
+                    - daily
+                    - weekly
+                    - monthly
+                  example: daily
+                endDate:
+                  allOf:
+                    - $ref: '#/components/schemas/Timestamp'
+                  description: >-
+                    Timestamp after which the strategy stops executing. Only
+                    relevant when `frequency` is set. Use 0 for no end date.
+                    Defaults to 0.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: >-
+            EIP-712 data to be signed to create the lending rebalancing
+            action or strategy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /stablecoin-consolidation:
+    post:
+      tags:
+        - Actions
+      description: Submit the signature to create the stablecoin consolidation action or strategy
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /stablecoin-consolidation/data:
+    post:
+      tags:
+        - Actions
+      description: >-
+        Computes EIP-712 data to be signed to swap all tokens above a given
+        USD threshold into a stablecoin, non-atomically.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - chainId
+                - usdMinAmount
+                - wallet
+                - slippageBps
+              properties:
+                token:
+                  type: string
+                  description: Stablecoin to consolidate all token balances into
+                  enum:
+                    - USDC
+                    - USDT
+                    - DAI
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID to use to fetch tokens and consolidate to stablecoin
+                usdMinAmount:
+                  type: string
+                  description: >-
+                    Threshold for token balances to fetch, in USD as a
+                    decimal string
+                  example: '0.05'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address whose balances are consolidated
+                slippageBps:
+                  type: integer
+                  description: Maximum slippage in token out amount to accept, in BPS (10000 = 100%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 50
+                frequency:
+                  type: string
+                  description: >-
+                    How often to sweep balances into the stablecoin. Omit to
+                    run once, immediately.
+                  enum:
+                    - hourly
+                    - daily
+                    - weekly
+                    - monthly
+                  example: daily
+                endDate:
+                  allOf:
+                    - $ref: '#/components/schemas/Timestamp'
+                  description: >-
+                    Timestamp after which the strategy stops executing. Only
+                    relevant when `frequency` is set. Use 0 for no end date.
+                    Defaults to 0.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: >-
+            EIP-712 data to be signed to create the consolidation to
+            stablecoin action or strategy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /balances:
+    post:
+      tags:
+        - Oracle queries
+      description: Get the token balance of an owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - token
+                - owner
+              properties:
+                chainId:
+                  $ref: '#/components/schemas/ChainId'
+                token:
+                  $ref: '#/components/schemas/Address'
+                owner:
+                  $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: Token balance
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - amount
+                properties:
+                  amount:
+                    $ref: '#/components/schemas/BigInteger'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /allowances:
+    post:
+      tags:
+        - Oracle queries
+      description: Get the token amount an owner has allowed a spender to use
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - token
+                - owner
+                - spender
+              properties:
+                chainId:
+                  $ref: '#/components/schemas/ChainId'
+                token:
+                  $ref: '#/components/schemas/Address'
+                owner:
+                  $ref: '#/components/schemas/Address'
+                spender:
+                  $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: Allowed token amount
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - amount
+                properties:
+                  amount:
+                    $ref: '#/components/schemas/BigInteger'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /prices:
+    post:
+      tags:
+        - Oracle queries
+      description: Get the USD price of a token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - token
+              properties:
+                chainId:
+                  $ref: '#/components/schemas/ChainId'
+                token:
+                  $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: Token price in USD
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - price
+                properties:
+                  price:
+                    type: string
+                    description: USD price per token, as a decimal string
+                    example: '3245.12'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+components:
+  requestBodies:
+    SignatureSubmission:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - typedData
+              - sig
+              - signer
+            properties:
+              typedData:
+                type: object
+                required:
+                  - types
+                  - values
+                properties:
+                  types:
+                    $ref: '#/components/schemas/TriggerTypes'
+                  values:
+                    $ref: '#/components/schemas/TriggerTypedDataValues'
+              sig:
+                allOf:
+                  - $ref: '#/components/schemas/Signature'
+                description: EIP-712 signature over `typedData` by `signer`
+              signer:
+                $ref: '#/components/schemas/Address'
+  responses:
+    SignatureSubmitted:
+      description: Signature submitted
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sig:
+                allOf:
+                  - $ref: '#/components/schemas/Signature'
+    BadRequest:
+      description: Bad request — invalid parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized — missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden — caller is not allowed to access this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Address:
+      type: string
+      description: A valid EVM address (0x-prefixed, 20 bytes).
+      example: '0x1234567890abcdef1234567890abcdef12345678'
+    HexString:
+      type: string
+      description: An arbitrary 0x-prefixed hex string.
+      example: '0xdeadbeef'
+    Signature:
+      type: string
+      description: A 65-byte hex-encoded ECDSA signature (130 hex chars + 0x prefix).
+      example: 0xabc...def
+    BigInteger:
+      type: string
+      description: A non-negative integer represented as a decimal string.
+      example: '1000000000000000000'
+    CID:
+      type: string
+      description: An IPFS content identifier (CIDv0 or CIDv1 base32).
+      example: QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco
+    SemVer:
+      type: string
+      description: A semantic version string.
+      example: 1.0.0
+    Timestamp:
+      type: integer
+      description: Unix timestamp in milliseconds.
+      example: 1700000000000
+    ChainId:
+      type: integer
+      description: A supported chain ID.
+      example: 1
+    Settler:
+      type: object
+      required:
+        - address
+        - chainId
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        chainId:
+          $ref: '#/components/schemas/ChainId'
+    TriggerDomain:
+      type: object
+      required:
+        - name
+        - version
+      properties:
+        name:
+          type: string
+          example: Mimic Protocol - Registry
+        version:
+          type: string
+          example: '1'
+    TriggerSignaturePayload:
+      type: object
+      description: EIP-712 data to be signed to authorize a function execution
+      required:
+        - domain
+        - primaryType
+        - types
+        - values
+      properties:
+        domain:
+          $ref: '#/components/schemas/TriggerDomain'
+        primaryType:
+          type: string
+          example: 'Trigger'
+        types:
+          $ref: '#/components/schemas/TriggerTypes'
+        values:
+          $ref: '#/components/schemas/TriggerTypedDataValues'
+    TriggerType:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+      description: |
+        Trigger execution mode:
+        - `0` — Cron: fires on a recurring cron schedule
+        - `1` — Event: fires on an on-chain event
+        - `2` — Once: fires exactly once at a specific time
+    TriggerTypes:
+      type: object
+      required:
+        - Input
+        - Config
+        - Trigger
+      description: EIP-712 type definitions for the trigger's typed data
+      properties:
+        Input:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypedDataField'
+        Config:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypedDataField'
+        Trigger:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypedDataField'
+    TypedDataField:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          description: Solidity type or a custom type (`Token`, `TokenAmount`)
+    TriggerTypedDataValues:
+      type: object
+      required:
+        - functionCid
+        - version
+        - input
+        - config
+        - executionFeeLimit
+        - minValidations
+      properties:
+        functionCid:
+          $ref: '#/components/schemas/CID'
+        version:
+          $ref: '#/components/schemas/SemVer'
+        input:
+          type: object
+          description: Key-value map matching the function's manifest input schema
+        config:
+          $ref: '#/components/schemas/TriggerConfig'
+        executionFeeLimit:
+          allOf:
+            - $ref: '#/components/schemas/BigInteger'
+          description: Maximum fee (in protocol units) the signer accepts per execution
+        minValidations:
+          type: integer
+          example: 1
+          description: Minimum number of validator confirmations required
+    CronTriggerConfig:
+      type: object
+      required:
+        - type
+        - schedule
+        - delta
+        - endDate
+      properties:
+        type:
+          type: integer
+          enum:
+            - 0
+        schedule:
+          type: string
+          description: A valid cron expression
+          example: '0 * * * *'
+        delta:
+          type: string
+          description: A time delta string
+          example: '30m'
+        endDate:
+          $ref: '#/components/schemas/Timestamp'
+    EventTriggerConfig:
+      type: object
+      required:
+        - type
+        - chainId
+        - contract
+        - topics
+        - delta
+        - endDate
+      properties:
+        type:
+          type: integer
+          enum:
+            - 1
+        chainId:
+          $ref: '#/components/schemas/ChainId'
+        contract:
+          description: Contract address to filter events from, or `"any"` for any contract
+          oneOf:
+            - $ref: '#/components/schemas/Address'
+            - type: string
+              enum:
+                - any
+        topics:
+          type: array
+          description: >
+            Array of 1–4 topic groups. Each group is an OR filter; groups are
+            AND-combined.
+          minItems: 1
+          maxItems: 4
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/HexString'
+        delta:
+          type: string
+          description: Time delta after the event before execution fires
+        endDate:
+          $ref: '#/components/schemas/Timestamp'
+    OnceTriggerConfig:
+      type: object
+      required:
+        - type
+        - startDate
+        - delta
+        - endDate
+      properties:
+        type:
+          type: integer
+          enum:
+            - 2
+        startDate:
+          $ref: '#/components/schemas/Timestamp'
+        delta:
+          type: string
+          description: Duration window; `endDate` must equal `startDate + delta`
+        endDate:
+          $ref: '#/components/schemas/Timestamp'
+    TriggerConfig:
+      description: >
+        Trigger schedule configuration. Discriminated by the integer `type`
+        field: `0` → CronTriggerConfig, `1` → EventTriggerConfig, `2` →
+        OnceTriggerConfig.
+      oneOf:
+        - $ref: '#/components/schemas/CronTriggerConfig'
+        - $ref: '#/components/schemas/EventTriggerConfig'
+        - $ref: '#/components/schemas/OnceTriggerConfig'
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
