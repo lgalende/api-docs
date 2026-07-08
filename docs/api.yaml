@@ -582,11 +582,19 @@ paths:
                     - USDT
                 pools:
                   type: array
-                  description: DefiLlama pool ids to consider when rotating
+                  description: >-
+                    Lending protocols to consider when rotating. The
+                    highest-yielding pool for `token` on `chainId` is resolved
+                    for each selected protocol.
                   minItems: 1
                   items:
                     type: string
-                    example: 747c1d2a-c668-4682-b9f9-296708a3dd90
+                    enum:
+                      - aave
+                      - compound
+                      - morpho
+                      - spark
+                    example: aave
                 rotationThresholdBps:
                   type: integer
                   description: >-
