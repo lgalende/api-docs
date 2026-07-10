@@ -132,6 +132,76 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /transfers:
+    post:
+      tags:
+        - Actions
+      description: Submit the signature to execute the transfer
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /transfers/data:
+    post:
+      tags:
+        - Actions
+      description: >-
+        Computes EIP-712 data to be signed to transfer tokens from a wallet
+        to a recipient.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - token
+                - amount
+                - wallet
+                - recipient
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the transfer will be executed
+                token:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to transfer. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                amount:
+                  type: string
+                  description: Amount of token to transfer, as a decimal string
+                  example: '10.5'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address from where the funds will be pulled
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address that receives the tokens
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the transfer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /swaps:
     post:
       tags:
