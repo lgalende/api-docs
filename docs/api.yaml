@@ -13,10 +13,19 @@ externalDocs:
 tags:
   - name: General
     description: General information
-  - name: Actions
+  - name: Wallets management
     description: >-
-      Compute EIP-712 data to sign via `POST /{action}/data`, then
-      submit the signature via `POST /{action}`
+      Create and manage Safe wallets. Compute EIP-712 data to sign via
+      `POST /wallets/data`, then submit the signature via `POST /wallets`
+  - name: Simple actions
+    description: >-
+      Basic wallet operations. Compute EIP-712 data to sign via
+      `POST /{action}/data`, then submit the signature via `POST /{action}`
+  - name: Assets management
+    description: >-
+      Automated strategies that manage a portfolio over time. Compute
+      EIP-712 data to sign via `POST /{action}/data`, then submit the
+      signature via `POST /{action}`
   - name: Oracle queries
     description: Read blockchain data
 paths:
@@ -82,7 +91,7 @@ paths:
   /wallets:
     post:
       tags:
-        - Actions
+        - Wallets management
       description: Submit the signature to create the Safe wallet
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -98,7 +107,7 @@ paths:
   /wallets/data:
     post:
       tags:
-        - Actions
+        - Wallets management
       description: Computes EIP-712 data to be signed to create a new Safe wallet
       requestBody:
         required: true
@@ -135,7 +144,7 @@ paths:
   /transfers:
     post:
       tags:
-        - Actions
+        - Simple actions
       description: Submit the signature to execute the transfer
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -151,7 +160,7 @@ paths:
   /transfers/data:
     post:
       tags:
-        - Actions
+        - Simple actions
       description: >-
         Computes EIP-712 data to be signed to transfer tokens from a wallet
         to a recipient.
@@ -205,7 +214,7 @@ paths:
   /swaps:
     post:
       tags:
-        - Actions
+        - Simple actions
       description: Submit the signature to execute the swap
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -221,7 +230,7 @@ paths:
   /swaps/data:
     post:
       tags:
-        - Actions
+        - Simple actions
       description: >-
         Computes EIP-712 data to be signed to create a swap operation (single-chain or cross-chain).
       requestBody:
@@ -291,7 +300,7 @@ paths:
   /dca:
     post:
       tags:
-        - Actions
+        - Assets management
       description: Submit the signature to create the DCA strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -307,7 +316,7 @@ paths:
   /dca/data:
     post:
       tags:
-        - Actions
+        - Assets management
       description: >-
         Computes EIP-712 data to be signed to create a recurring DCA
         (dollar-cost averaging) strategy.
@@ -387,7 +396,7 @@ paths:
   /stop-loss-take-profit:
     post:
       tags:
-        - Actions
+        - Assets management
       description: Submit the signature to create the stop-loss / take-profit strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -403,7 +412,7 @@ paths:
   /stop-loss-take-profit/data:
     post:
       tags:
-        - Actions
+        - Assets management
       description: >-
         Computes EIP-712 data to be signed to create a stop-loss / take-profit
         strategy that monitors a token's price and swaps it when a threshold
@@ -491,7 +500,7 @@ paths:
   /portfolio-rebalancing:
     post:
       tags:
-        - Actions
+        - Assets management
       description: Submit the signature to create the portfolio rebalancing action or strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -507,7 +516,7 @@ paths:
   /portfolio-rebalancing/data:
     post:
       tags:
-        - Actions
+        - Assets management
       description: >-
         Computes EIP-712 data to be signed to rebalance a portfolio to target
         token allocations, either once or as a recurring strategy.
@@ -606,7 +615,7 @@ paths:
   /lending-rebalancing:
     post:
       tags:
-        - Actions
+        - Assets management
       description: Submit the signature to create the lending rebalancing action or strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -622,7 +631,7 @@ paths:
   /lending-rebalancing/data:
     post:
       tags:
-        - Actions
+        - Assets management
       description: >-
         Computes EIP-712 data to be signed to move a deposit to the
         highest-yielding of the selected lending markets, either once or as
@@ -723,7 +732,7 @@ paths:
   /stablecoin-consolidation:
     post:
       tags:
-        - Actions
+        - Assets management
       description: Submit the signature to create the stablecoin consolidation action or strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -739,7 +748,7 @@ paths:
   /stablecoin-consolidation/data:
     post:
       tags:
-        - Actions
+        - Assets management
       description: >-
         Computes EIP-712 data to be signed to swap all tokens above a given
         USD threshold into a stablecoin, non-atomically.
