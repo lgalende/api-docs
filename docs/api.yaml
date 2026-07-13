@@ -130,7 +130,11 @@ paths:
                   example: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
                 expectedAddress:
                   type: string
-                  description: If you already created a wallet in another chain and you want the new wallet to have the same address
+                  description: >-
+                    Use this option to create a wallet with the same
+                    address as one previously deployed on another chain. If
+                    the wallet already exists for the specified `owner` and
+                    `chainId`, it skips wallet creation.
                   example: '0x1234567890abcdef1234567890abcdef12345678'
       responses:
         '200':
@@ -650,6 +654,188 @@ paths:
                         description: >-
                           Transaction hash. Present only when status is
                           `succeeded`.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /deposit-splitting:
+    post:
+      tags:
+        - Assets management
+      description: Submit the signature to create the deposit splitting strategy
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /deposit-splitting/data:
+    post:
+      tags:
+        - Assets management
+      description: >-
+        Computes EIP-712 data to be signed to create a deposit splitting
+        strategy: a deposit address that accumulates incoming deposits of a
+        given token and periodically splits the balance across one or more
+        recipients.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - owner
+                - token
+                - allocations
+                - frequency
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the deposit address will be created
+                owner:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that owns the deposit address and can update or
+                    cancel its redirection rule
+                token:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Token to redirect on deposit. Use
+                    `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native
+                    token. Deposits of any other token are not redirected.
+                allocations:
+                  type: array
+                  description: >-
+                    How the accumulated balance of token is split across
+                    recipients on each execution. `bps` values must sum to
+                    10000 (100%).
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - recipient
+                      - bps
+                    properties:
+                      recipient:
+                        allOf:
+                          - $ref: '#/components/schemas/Address'
+                        description: Address to redirect a share of the balance to
+                      bps:
+                        type: integer
+                        description: Share of the balance routed to this recipient, in basis points (e.g. 5000 = 50%)
+                        minimum: 0
+                        maximum: 10000
+                        example: 5000
+                frequency:
+                  type: string
+                  description: How often the accumulated balance is split across recipients
+                  enum:
+                    - hourly
+                    - daily
+                    - weekly
+                    - monthly
+                  example: daily
+                endDate:
+                  allOf:
+                    - $ref: '#/components/schemas/Timestamp'
+                  description: Timestamp after which the strategy stops executing. Use 0 for no end date. Defaults to 0.
+                expectedAddress:
+                  type: string
+                  description: >-
+                    Use this option to create a deposit address with the
+                    same address as one previously deployed on another
+                    chain. If a deposit address already exists for the
+                    specified owner and chainId, the existing address is
+                    returned without redeploying it.
+                  example: '0x1234567890abcdef1234567890abcdef12345678'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the deposit splitting strategy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /deposit-splitting/{sig}:
+    get:
+      tags:
+        - Assets management
+      description: >-
+        Get the status of the deposit splitting strategy and its executions
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /deposit-splitting
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the deposit splitting strategy and its executions
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - executions
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - active
+                      - stopped
+                      - expired
+                    description: Status of the underlying recurring trigger
+                  inputs:
+                    type: object
+                    description: Key-value map of the original request parameters
+                  nextExecution:
+                    allOf:
+                      - $ref: '#/components/schemas/Timestamp'
+                    description: >-
+                      Timestamp of the next scheduled execution. Omitted
+                      when `status` is not `active`.
+                  depositAddress:
+                    allOf:
+                      - $ref: '#/components/schemas/Address'
+                    description: Address of the created deposit address. Present once known.
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending
+                    items:
+                      description: Status of a single execution of the strategy
+                      allOf:
+                        - $ref: '#/components/schemas/ExecutionStatus'
+                        - type: object
+                          properties:
+                            transfers:
+                              type: array
+                              description: Amounts sent to each recipient during this execution
+                              items:
+                                type: object
+                                required:
+                                  - recipient
+                                  - amount
+                                properties:
+                                  recipient:
+                                    allOf:
+                                      - $ref: '#/components/schemas/Address'
+                                  amount:
+                                    type: string
+                                    description: Amount sent to recipient, as a decimal string
+                                    example: '10.3'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
