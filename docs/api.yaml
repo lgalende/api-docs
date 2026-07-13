@@ -232,7 +232,8 @@ paths:
       tags:
         - Simple actions
       description: >-
-        Computes EIP-712 data to be signed to create a swap operation (single-chain or cross-chain).
+        Computes EIP-712 data to be signed to create a single-chain swap
+        operation.
       requestBody:
         required: true
         content:
@@ -240,22 +241,16 @@ paths:
             schema:
               type: object
               required:
-                - sourceChainId
-                - destinationChainId
+                - chainId
                 - tokenIn
                 - amount
                 - tokenOut
                 - wallet
-                - slippageBps
               properties:
-                sourceChainId:
+                chainId:
                   allOf:
                     - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID to swap the tokenIn from
-                destinationChainId:
-                  allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID to receive the tokenOut on
+                  description: Chain ID where the swap will be executed
                 tokenIn:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -274,10 +269,20 @@ paths:
                   description: Address from where the funds will be pulled
                 slippageBps:
                   type: integer
-                  description: Maximum slippage in tokenOut amount to accept, in basis points (e.g. 10000 = 100%)
+                  description: >-
+                    Maximum slippage in tokenOut amount to accept, in basis
+                    points (e.g. 10000 = 100%). Exactly one of
+                    `slippageBps` or `minAmountOut` is required, not both.
                   minimum: 0
                   maximum: 10000
                   example: 50
+                minAmountOut:
+                  type: string
+                  description: >-
+                    Minimum amount of tokenOut to accept, as a decimal
+                    string. Exactly one of `slippageBps` or `minAmountOut`
+                    is required, not both.
+                  example: '0.048'
                 recipient:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -291,6 +296,175 @@ paths:
       responses:
         '200':
           description: EIP-712 data to be signed to create the swap intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /bridges:
+    post:
+      tags:
+        - Simple actions
+      description: Submit the signature to execute the bridge
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /bridges/data:
+    post:
+      tags:
+        - Simple actions
+      description: >-
+        Computes EIP-712 data to be signed to move a token from one chain to
+        another.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sourceChainId
+                - destinationChainId
+                - token
+                - amount
+                - wallet
+              properties:
+                sourceChainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID to bridge the token from
+                destinationChainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID to receive the token on
+                token:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to bridge. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                amount:
+                  type: string
+                  description: Amount of token to bridge, as a decimal string
+                  example: '0.05'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address from where the funds will be pulled
+                slippageBps:
+                  type: integer
+                  description: >-
+                    Maximum slippage in received amount to accept, in basis
+                    points (e.g. 10000 = 100%). Exactly one of
+                    `slippageBps` or `minAmountOut` is required, not both.
+                  minimum: 0
+                  maximum: 10000
+                  example: 50
+                minAmountOut:
+                  type: string
+                  description: >-
+                    Minimum amount of token to receive on destinationChainId,
+                    as a decimal string. Exactly one of `slippageBps` or
+                    `minAmountOut` is required, not both.
+                  example: '0.048'
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the token on destinationChainId. Defaults to `wallet`.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the bridge intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /lendings:
+    post:
+      tags:
+        - Simple actions
+      description: Submit the signature to execute the deposit into a lending pool
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /lendings/data:
+    post:
+      tags:
+        - Simple actions
+      description: >-
+        Computes EIP-712 data to be signed to deposit a token into a
+        lending pool.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - token
+                - protocol
+                - amount
+                - wallet
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the deposit will be made
+                token:
+                  type: string
+                  description: Underlying token to lend
+                  enum:
+                    - USDC
+                    - USDT
+                protocol:
+                  type: string
+                  description: Lending protocol to deposit into
+                  enum:
+                    - aave
+                    - compound
+                    - morpho
+                    - spark
+                amount:
+                  type: string
+                  description: Amount of token to deposit, as a decimal string
+                  example: '10.5'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address from where the funds will be pulled and that
+                    receives the deposit position
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the deposit
           content:
             application/json:
               schema:
@@ -332,7 +506,6 @@ paths:
                 - tokenOut
                 - amount
                 - wallet
-                - slippageBps
                 - frequency
               properties:
                 chainId:
@@ -357,10 +530,20 @@ paths:
                   description: Address from where the funds will be pulled
                 slippageBps:
                   type: integer
-                  description: Slippage tolerance, in basis points (e.g. 50 = 0.50%)
+                  description: >-
+                    Slippage tolerance, in basis points (e.g. 50 = 0.50%).
+                    Exactly one of `slippageBps` or `minAmountOut` is
+                    required, not both.
                   minimum: 0
                   maximum: 10000
                   example: 50
+                minAmountOut:
+                  type: string
+                  description: >-
+                    Minimum amount of tokenOut to accept per execution, as a
+                    decimal string. Exactly one of `slippageBps` or
+                    `minAmountOut` is required, not both.
+                  example: '10.3'
                 frequency:
                   type: string
                   description: How often the DCA swap executes
@@ -501,7 +684,7 @@ paths:
     post:
       tags:
         - Assets management
-      description: Submit the signature to create the portfolio rebalancing action or strategy
+      description: Submit the signature to create the portfolio rebalancing strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -605,7 +788,7 @@ paths:
         '200':
           description: >-
             EIP-712 data to be signed to create the portfolio rebalancing
-            action or strategy
+            strategy
           content:
             application/json:
               schema:
@@ -616,7 +799,7 @@ paths:
     post:
       tags:
         - Assets management
-      description: Submit the signature to create the lending rebalancing action or strategy
+      description: Submit the signature to create the lending rebalancing strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -645,7 +828,7 @@ paths:
               required:
                 - chainId
                 - token
-                - pools
+                - protocols
                 - rotationThresholdBps
                 - wallet
               properties:
@@ -659,7 +842,7 @@ paths:
                   enum:
                     - USDC
                     - USDT
-                pools:
+                protocols:
                   type: array
                   description: >-
                     Lending protocols to consider when rotating. The
@@ -722,7 +905,7 @@ paths:
         '200':
           description: >-
             EIP-712 data to be signed to create the lending rebalancing
-            action or strategy
+            strategy
           content:
             application/json:
               schema:
@@ -733,7 +916,7 @@ paths:
     post:
       tags:
         - Assets management
-      description: Submit the signature to create the stablecoin consolidation action or strategy
+      description: Submit the signature to create the stablecoin consolidation strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -819,7 +1002,7 @@ paths:
         '200':
           description: >-
             EIP-712 data to be signed to create the consolidation to
-            stablecoin action or strategy
+            stablecoin strategy
           content:
             application/json:
               schema:
