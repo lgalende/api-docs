@@ -141,6 +141,44 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /wallets/{sig}:
+    get:
+      tags:
+        - Wallets management
+      description: Get the status of a wallet creation execution
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /wallets
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the wallet creation execution
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExecutionStatus'
+                  - type: object
+                    properties:
+                      txHash:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: >-
+                          Transaction hash. Present only when status is
+                          `succeeded`.
+                      walletAddress:
+                        allOf:
+                          - $ref: '#/components/schemas/Address'
+                        description: >-
+                          Address of the created wallet. Present only when
+                          status is `succeeded`.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /transfers:
     post:
       tags:
@@ -211,6 +249,38 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /transfers/{sig}:
+    get:
+      tags:
+        - Simple actions
+      description: Get the status of a transfer execution
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /transfers
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the transfer execution
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExecutionStatus'
+                  - type: object
+                    properties:
+                      txHash:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: >-
+                          Transaction hash. Present only when status is
+                          `succeeded`.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /swaps:
     post:
       tags:
@@ -302,6 +372,43 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /swaps/{sig}:
+    get:
+      tags:
+        - Simple actions
+      description: Get the status of a swap execution
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /swaps
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the swap execution
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExecutionStatus'
+                  - type: object
+                    properties:
+                      txHash:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: >-
+                          Transaction hash. Present only when status is
+                          `succeeded`.
+                      amountOut:
+                        type: string
+                        description: >-
+                          Actual amount of tokenOut received. Present only
+                          when status is `succeeded`.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /bridges:
     post:
       tags:
@@ -393,6 +500,50 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /bridges/{sig}:
+    get:
+      tags:
+        - Simple actions
+      description: Get the status of a bridge execution
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /bridges
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the bridge execution
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExecutionStatus'
+                  - type: object
+                    properties:
+                      txHash:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: >-
+                          Transaction hash on sourceChainId. Present only
+                          when status is `succeeded`.
+                      destinationTxHash:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: >-
+                          Transaction hash on destinationChainId. Present
+                          only when status is `succeeded`.
+                      amountOut:
+                        type: string
+                        description: >-
+                          Actual amount of token received on
+                          destinationChainId. Present only when status is
+                          `succeeded`.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /lendings:
     post:
       tags:
@@ -471,6 +622,38 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /lendings/{sig}:
+    get:
+      tags:
+        - Simple actions
+      description: Get the status of a lending deposit execution
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /lendings
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the lending deposit execution
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExecutionStatus'
+                  - type: object
+                    properties:
+                      txHash:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: >-
+                          Transaction hash. Present only when status is
+                          `succeeded`.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /dca:
     post:
       tags:
@@ -576,6 +759,29 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /dca/{sig}:
+    get:
+      tags:
+        - Assets management
+      description: Get the status of the DCA strategy and its executions
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /dca
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the DCA strategy and its executions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /stop-loss-take-profit:
     post:
       tags:
@@ -680,6 +886,33 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /stop-loss-take-profit/{sig}:
+    get:
+      tags:
+        - Assets management
+      description: >-
+        Get the status of the stop-loss / take-profit strategy and its
+        executions
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /stop-loss-take-profit
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: >-
+            Status of the stop-loss / take-profit strategy and its
+            executions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /portfolio-rebalancing:
     post:
       tags:
@@ -795,6 +1028,32 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /portfolio-rebalancing/{sig}:
+    get:
+      tags:
+        - Assets management
+      description: >-
+        Get the status of the portfolio rebalancing strategy and its
+        executions
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /portfolio-rebalancing
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: >-
+            Status of the portfolio rebalancing strategy and its executions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /lending-rebalancing:
     post:
       tags:
@@ -912,6 +1171,32 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /lending-rebalancing/{sig}:
+    get:
+      tags:
+        - Assets management
+      description: >-
+        Get the status of the lending rebalancing strategy and its
+        executions
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /lending-rebalancing
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: >-
+            Status of the lending rebalancing strategy and its executions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /stablecoin-consolidation:
     post:
       tags:
@@ -934,7 +1219,7 @@ paths:
         - Assets management
       description: >-
         Computes EIP-712 data to be signed to swap all tokens above a given
-        USD threshold into a stablecoin, non-atomically.
+        USD threshold into a stablecoin, each swap in a separate transaction.
       requestBody:
         required: true
         content:
@@ -1009,6 +1294,33 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /stablecoin-consolidation/{sig}:
+    get:
+      tags:
+        - Assets management
+      description: >-
+        Get the status of the stablecoin consolidation strategy and its
+        executions
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /stablecoin-consolidation
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: >-
+            Status of the stablecoin consolidation strategy and its
+            executions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /balances:
     post:
       tags:
@@ -1216,6 +1528,117 @@ components:
       type: integer
       description: A supported chain ID.
       example: 1
+    ExecutionStatus:
+      type: object
+      description: Status of an action execution
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - pending
+            - succeeded
+            - failed
+        inputs:
+          type: object
+          description: Key-value map of the original request parameters
+        timestamp:
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+          description: Timestamp of the execution
+        logs:
+          type: array
+          description: Execution log messages
+          items:
+            type: string
+        error:
+          type: string
+          description: Error message. Present only when status is `failed`.
+    Swap:
+      type: object
+      description: Single-chain or cross-chain swap that occurred during an execution
+      required:
+        - sourceChainId
+        - destinationChainId
+        - tokenIn
+        - tokenOut
+        - amountIn
+        - amountOut
+      properties:
+        sourceChainId:
+          allOf:
+            - $ref: '#/components/schemas/ChainId'
+          description: Chain ID tokenIn was swapped from
+        destinationChainId:
+          allOf:
+            - $ref: '#/components/schemas/ChainId'
+          description: >-
+            Chain ID tokenOut was received on. Equal to sourceChainId for a
+            same-chain swap.
+        tokenIn:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Token that was spent
+        tokenOut:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Token that was received
+        amountIn:
+          type: string
+          description: Amount of tokenIn spent, as a decimal string
+          example: '10.5'
+        amountOut:
+          type: string
+          description: Amount of tokenOut received, as a decimal string
+          example: '10.3'
+        txHash:
+          allOf:
+            - $ref: '#/components/schemas/HexString'
+          description: Transaction hash on sourceChainId
+        destinationTxHash:
+          allOf:
+            - $ref: '#/components/schemas/HexString'
+          description: >-
+            Transaction hash on destinationChainId. Present only when
+            destinationChainId differs from sourceChainId.
+    StrategyStatus:
+      type: object
+      description: Status of a recurring assets management strategy and its most recent executions
+      required:
+        - status
+        - executions
+      properties:
+        status:
+          type: string
+          enum:
+            - active
+            - stopped
+            - expired
+          description: Status of the underlying recurring trigger
+        inputs:
+          type: object
+          description: Key-value map of the original request parameters
+        nextExecution:
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+          description: >-
+            Timestamp of the next scheduled execution. Omitted when
+            `status` is not `active`.
+        executions:
+          type: array
+          description: Most recent executions, ordered by timestamp descending
+          items:
+            description: Status of a single execution of a recurring strategy
+            allOf:
+              - $ref: '#/components/schemas/ExecutionStatus'
+              - type: object
+                properties:
+                  swaps:
+                    type: array
+                    description: Single-chain or cross-chain swaps that occurred during this execution
+                    items:
+                      $ref: '#/components/schemas/Swap'
     Settler:
       type: object
       required:
