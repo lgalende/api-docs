@@ -15,8 +15,10 @@ tags:
     description: General information
   - name: Wallets management
     description: >-
-      Create and manage Safe wallets. Compute EIP-712 data to sign via
-      `POST /wallets/data`, then submit the signature via `POST /wallets`
+      Create and manage wallets. For Safe wallets, compute EIP-712 data to
+      sign via `POST /wallets/safe/data`, then submit the signature via
+      `POST /wallets/safe`. For custodial EOA wallets, create directly via
+      `POST /wallets/eoa`
   - name: Simple actions
     description: >-
       Basic wallet operations. Compute EIP-712 data to sign via
@@ -88,7 +90,104 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-  /wallets:
+  /wallets/eoa:
+    post:
+      tags:
+        - Wallets management
+      description: >-
+        Create a new custodial EOA wallet, generating and storing a new
+        keypair managed by Mimic
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: >-
+                    Supported chain ID from /chains for which to create the
+                    wallet
+      responses:
+        '200':
+          description: The newly created EOA wallet
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - chainId
+                  - address
+                properties:
+                  chainId:
+                    allOf:
+                      - $ref: '#/components/schemas/ChainId'
+                    description: Chain ID this wallet was created for
+                  address:
+                    allOf:
+                      - $ref: '#/components/schemas/Address'
+                    description: >-
+                      Address of the created EOA wallet, in the format
+                      used by the requested chainId
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags:
+        - Wallets management
+      description: >-
+        List the custodial EOA wallets created under the caller's account,
+        optionally filtered by chainId and/or address
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: chainId
+          in: query
+          required: false
+          description: Only return wallets created for this chain ID
+          schema:
+            $ref: '#/components/schemas/ChainId'
+        - name: address
+          in: query
+          required: false
+          description: >-
+            Only return wallets matching this address, if they belong to
+            the caller's account
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of EOA wallets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - address
+                    - chainId
+                  properties:
+                    chainId:
+                      allOf:
+                        - $ref: '#/components/schemas/ChainId'
+                      description: Chain ID this wallet was created for
+                    address:
+                      allOf:
+                        - $ref: '#/components/schemas/Address'
+                      description: >-
+                        Address of the EOA wallet, in the format used by
+                        chainId
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /wallets/safe:
     post:
       tags:
         - Wallets management
@@ -104,7 +203,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /wallets/data:
+  /wallets/safe/data:
     post:
       tags:
         - Wallets management
@@ -145,16 +244,16 @@ paths:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /wallets/{sig}:
+  /wallets/safe/{sig}:
     get:
       tags:
         - Wallets management
-      description: Get the status of a wallet creation execution
+      description: Get the status of a Safe wallet creation execution
       parameters:
         - name: sig
           in: path
           required: true
-          description: Signature submitted to POST /wallets
+          description: Signature submitted to POST /wallets/safe
           schema:
             $ref: '#/components/schemas/Signature'
       responses:
@@ -680,7 +779,7 @@ paths:
         - Assets management
       description: >-
         Computes EIP-712 data to be signed to create a deposit splitting
-        strategy: a deposit address that accumulates incoming deposits of a
+        strategy: a Safe wallet that accumulates incoming deposits of a
         given token and periodically splits the balance across one or more
         recipients.
       requestBody:
@@ -699,12 +798,12 @@ paths:
                 chainId:
                   allOf:
                     - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the deposit address will be created
+                  description: Chain ID where the Safe wallet will be created
                 owner:
                   allOf:
                     - $ref: '#/components/schemas/Address'
                   description: >-
-                    Address that owns the deposit address and can update or
+                    Address that owns the Safe wallet and can update or
                     cancel its redirection rule
                 token:
                   allOf:
@@ -752,11 +851,10 @@ paths:
                 expectedAddress:
                   type: string
                   description: >-
-                    Use this option to create a deposit address with the
+                    Use this option to create a Safe wallet with the
                     same address as one previously deployed on another
-                    chain. If a deposit address already exists for the
-                    specified owner and chainId, the existing address is
-                    returned without redeploying it.
+                    chain. If the wallet already exists for the
+                    specified owner and chainId, it skips wallet creation
                   example: '0x1234567890abcdef1234567890abcdef12345678'
       responses:
         '200':
@@ -810,7 +908,7 @@ paths:
                   depositAddress:
                     allOf:
                       - $ref: '#/components/schemas/Address'
-                    description: Address of the created deposit address. Present once known.
+                    description: Address of the created Safe wallet
                   executions:
                     type: array
                     description: Most recent executions, ordered by timestamp descending
@@ -1684,7 +1782,10 @@ components:
   schemas:
     Address:
       type: string
-      description: A valid EVM address (0x-prefixed, 20 bytes).
+      description: >-
+        A valid address on the relevant chain. Format depends on the chain:
+        0x-prefixed 20-byte hex for EVM chains, base58 for other chains
+        (e.g. Solana, Tron).
       example: '0x1234567890abcdef1234567890abcdef12345678'
     HexString:
       type: string
@@ -2028,3 +2129,8 @@ components:
       properties:
         message:
           type: string
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
