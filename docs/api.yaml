@@ -19,7 +19,7 @@ tags:
       sign via `POST /wallets/safe/data`, then submit the signature via
       `POST /wallets/safe`. For custodial EOA wallets, create directly via
       `POST /wallets/eoa`
-  - name: Simple actions
+  - name: Core actions
     description: >-
       Basic wallet operations. Compute EIP-712 data to sign via
       `POST /{action}/data`, then submit the signature via `POST /{action}`
@@ -285,7 +285,7 @@ paths:
   /transfers:
     post:
       tags:
-        - Simple actions
+        - Core actions
       description: Submit the signature to execute the transfer
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -301,7 +301,7 @@ paths:
   /transfers/data:
     post:
       tags:
-        - Simple actions
+        - Core actions
       description: >-
         Computes EIP-712 data to be signed to transfer tokens from a wallet
         to a recipient.
@@ -355,7 +355,7 @@ paths:
   /transfers/{sig}:
     get:
       tags:
-        - Simple actions
+        - Core actions
       description: Get the status of a transfer execution
       parameters:
         - name: sig
@@ -387,7 +387,7 @@ paths:
   /swaps:
     post:
       tags:
-        - Simple actions
+        - Core actions
       description: Submit the signature to execute the swap
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -403,7 +403,7 @@ paths:
   /swaps/data:
     post:
       tags:
-        - Simple actions
+        - Core actions
       description: >-
         Computes EIP-712 data to be signed to create a single-chain swap
         operation.
@@ -478,7 +478,7 @@ paths:
   /swaps/{sig}:
     get:
       tags:
-        - Simple actions
+        - Core actions
       description: Get the status of a swap execution
       parameters:
         - name: sig
@@ -515,7 +515,7 @@ paths:
   /bridges:
     post:
       tags:
-        - Simple actions
+        - Core actions
       description: Submit the signature to execute the bridge
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -531,7 +531,7 @@ paths:
   /bridges/data:
     post:
       tags:
-        - Simple actions
+        - Core actions
       description: >-
         Computes EIP-712 data to be signed to move a token from one chain to
         another.
@@ -606,7 +606,7 @@ paths:
   /bridges/{sig}:
     get:
       tags:
-        - Simple actions
+        - Core actions
       description: Get the status of a bridge execution
       parameters:
         - name: sig
@@ -650,7 +650,7 @@ paths:
   /lendings:
     post:
       tags:
-        - Simple actions
+        - Core actions
       description: Submit the signature to execute the deposit into a lending pool
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -666,7 +666,7 @@ paths:
   /lendings/data:
     post:
       tags:
-        - Simple actions
+        - Core actions
       description: >-
         Computes EIP-712 data to be signed to deposit a token into a
         lending pool.
@@ -728,7 +728,7 @@ paths:
   /lendings/{sig}:
     get:
       tags:
-        - Simple actions
+        - Core actions
       description: Get the status of a lending deposit execution
       parameters:
         - name: sig
