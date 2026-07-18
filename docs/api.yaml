@@ -994,7 +994,9 @@ paths:
                 wallet:
                   allOf:
                     - $ref: '#/components/schemas/Address'
-                  description: Address from where the funds will be pulled
+                  description: >-
+                    Address from where the funds will be pulled. EOAs are
+                    not supported (unless they use proper EIP-7702 delegation).
                 slippageBps:
                   type: integer
                   description: >-
@@ -1134,7 +1136,10 @@ paths:
                 wallet:
                   allOf:
                     - $ref: '#/components/schemas/Address'
-                  description: Address whose balance is monitored and from where the funds will be pulled
+                  description: >-
+                    Address whose balance is monitored and from where the
+                    funds will be pulled. EOAs are not supported (unless
+                    they use proper EIP-7702 delegation).
                 balanceBps:
                   type: integer
                   description: >-
@@ -1263,7 +1268,8 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address whose portfolio is rebalanced — holds the funds
-                    and receives the output
+                    and receives the output. EOAs are not supported
+                    (unless they use proper EIP-7702 delegation).
                 slippageBps:
                   type: integer
                   description: Slippage tolerance for the swaps, in basis points (e.g. 50 = 0.50%)
@@ -1412,7 +1418,8 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address whose deposit is rebalanced — holds the funds and
-                    receives the output
+                    receives the output. EOAs are not supported (unless
+                    they use proper EIP-7702 delegation).
                 startingPercentageBps:
                   type: integer
                   description: >-
@@ -1537,7 +1544,9 @@ paths:
                 wallet:
                   allOf:
                     - $ref: '#/components/schemas/Address'
-                  description: Address whose balances are consolidated
+                  description: >-
+                    Address whose balances are consolidated. EOAs are not
+                    supported (unless they use proper EIP-7702 delegation).
                 slippageBps:
                   type: integer
                   description: Maximum slippage in token out amount to accept, in BPS (10000 = 100%)
