@@ -288,7 +288,7 @@ paths:
         - Core actions
       description: Submit the signature to execute the transfer
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmission'
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
         '200':
           $ref: '#/components/responses/SignatureSubmitted'
@@ -349,7 +349,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - signaturePayload
+                  - requiredApprovals
+                properties:
+                  signaturePayload:
+                    allOf:
+                      - $ref: '#/components/schemas/TriggerSignaturePayload'
+                    description: EIP-712 data to be signed to create the transfer
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions that must be signed and
+                      submitted alongside the action signature. Empty when
+                      the wallet has already approved a sufficient amount.
+                    items:
+                      $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
   /transfers/{sig}:
@@ -390,7 +406,7 @@ paths:
         - Core actions
       description: Submit the signature to execute the swap
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmission'
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
         '200':
           $ref: '#/components/responses/SignatureSubmitted'
@@ -472,7 +488,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - signaturePayload
+                  - requiredApprovals
+                properties:
+                  signaturePayload:
+                    allOf:
+                      - $ref: '#/components/schemas/TriggerSignaturePayload'
+                    description: EIP-712 data to be signed to create the swap intent
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions that must be signed and
+                      submitted alongside the action signature. Empty when
+                      the wallet has already approved a sufficient amount.
+                    items:
+                      $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
   /swaps/{sig}:
@@ -518,7 +550,7 @@ paths:
         - Core actions
       description: Submit the signature to execute the bridge
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmission'
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
         '200':
           $ref: '#/components/responses/SignatureSubmitted'
@@ -600,7 +632,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - signaturePayload
+                  - requiredApprovals
+                properties:
+                  signaturePayload:
+                    allOf:
+                      - $ref: '#/components/schemas/TriggerSignaturePayload'
+                    description: EIP-712 data to be signed to create the bridge intent
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions that must be signed and
+                      submitted alongside the action signature. Empty when
+                      the wallet has already approved a sufficient amount.
+                    items:
+                      $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
   /bridges/{sig}:
@@ -653,7 +701,7 @@ paths:
         - Core actions
       description: Submit the signature to execute the deposit into a lending pool
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmission'
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
         '200':
           $ref: '#/components/responses/SignatureSubmitted'
@@ -722,7 +770,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - signaturePayload
+                  - requiredApprovals
+                properties:
+                  signaturePayload:
+                    allOf:
+                      - $ref: '#/components/schemas/TriggerSignaturePayload'
+                    description: EIP-712 data to be signed to create the deposit
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions that must be signed and
+                      submitted alongside the action signature. Empty when
+                      the wallet has already approved a sufficient amount.
+                    items:
+                      $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
   /lendings/{sig}:
@@ -1733,26 +1797,30 @@ components:
           schema:
             type: object
             required:
-              - typedData
-              - sig
-              - signer
+              - signature
             properties:
-              typedData:
-                type: object
-                required:
-                  - types
-                  - values
-                properties:
-                  types:
-                    $ref: '#/components/schemas/TriggerTypes'
-                  values:
-                    $ref: '#/components/schemas/TriggerTypedDataValues'
-              sig:
-                allOf:
-                  - $ref: '#/components/schemas/Signature'
-                description: EIP-712 signature over `typedData` by `signer`
-              signer:
-                $ref: '#/components/schemas/Address'
+              signature:
+                $ref: '#/components/schemas/TriggerSignature'
+    SignatureSubmissionWithApprovals:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - signature
+            properties:
+              signature:
+                $ref: '#/components/schemas/TriggerSignature'
+              approvals:
+                type: array
+                description: >-
+                  Signed raw `approve()` transactions authorizing the
+                  token spend needed for this action, one per entry in the
+                  corresponding `/data` response's `requiredApprovals`.
+                  Omit or leave empty when `requiredApprovals` was empty.
+                items:
+                  $ref: '#/components/schemas/SignedApproval'
   responses:
     SignatureSubmitted:
       description: Signature submitted
@@ -1975,6 +2043,100 @@ components:
           $ref: '#/components/schemas/TriggerTypes'
         values:
           $ref: '#/components/schemas/TriggerTypedDataValues'
+    TriggerSignature:
+      type: object
+      description: An EIP-712 signature over a TriggerSignaturePayload, submitted to authorize execution
+      required:
+        - typedData
+        - sig
+        - signer
+      properties:
+        typedData:
+          type: object
+          required:
+            - types
+            - values
+          properties:
+            types:
+              $ref: '#/components/schemas/TriggerTypes'
+            values:
+              $ref: '#/components/schemas/TriggerTypedDataValues'
+        sig:
+          allOf:
+            - $ref: '#/components/schemas/Signature'
+          description: EIP-712 signature over `typedData` by `signer`
+        signer:
+          $ref: '#/components/schemas/Address'
+    ApprovalTransaction:
+      type: object
+      description: >-
+        Unsigned raw transaction calling `approve(spender, amount)` on the
+        token contract, to authorize the token spend required by an action.
+      required:
+        - to
+        - data
+        - value
+      properties:
+        to:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Token contract address to call. Equal to `token`.
+        data:
+          allOf:
+            - $ref: '#/components/schemas/HexString'
+          description: ABI-encoded calldata for `approve(spender, amount)`
+        value:
+          type: string
+          description: Native token value to send with the transaction. Always `"0"`.
+          example: '0'
+    ApprovalRequirement:
+      type: object
+      description: >-
+        A raw `approve()` transaction that must be signed and submitted
+        alongside the action signature before the action can execute.
+      required:
+        - token
+        - spender
+        - amount
+        - transaction
+      properties:
+        token:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Token that needs approval
+        spender:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Address to be approved to spend the token
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/BigInteger'
+          description: Amount to approve
+        transaction:
+          allOf:
+            - $ref: '#/components/schemas/ApprovalTransaction'
+          description: Raw `approve()` transaction to sign
+    SignedApproval:
+      type: object
+      description: >-
+        A signed raw `approve()` transaction submitted to satisfy one
+        entry of a `/data` response's `requiredApprovals`.
+      required:
+        - token
+        - signedTransaction
+      properties:
+        token:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: >-
+            Token this approval is for, matching the `token` of the
+            corresponding `requiredApprovals` entry
+        signedTransaction:
+          allOf:
+            - $ref: '#/components/schemas/HexString'
+          description: >-
+            The matching `requiredApprovals[].transaction`, signed and
+            RLP-encoded (as accepted by `eth_sendRawTransaction`)
     TriggerType:
       type: integer
       enum:
