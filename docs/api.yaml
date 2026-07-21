@@ -948,56 +948,39 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - status
-                  - executions
-                properties:
-                  status:
-                    type: string
-                    enum:
-                      - active
-                      - stopped
-                      - expired
-                    description: Status of the underlying recurring trigger
-                  inputs:
-                    type: object
-                    description: Key-value map of the original request parameters
-                  nextExecution:
-                    allOf:
-                      - $ref: '#/components/schemas/Timestamp'
-                    description: >-
-                      Timestamp of the next scheduled execution. Omitted
-                      when `status` is not `active`.
-                  depositAddress:
-                    allOf:
-                      - $ref: '#/components/schemas/Address'
-                    description: Address of the created Safe wallet
-                  executions:
-                    type: array
-                    description: Most recent executions, ordered by timestamp descending
-                    items:
-                      description: Status of a single execution of the strategy
-                      allOf:
-                        - $ref: '#/components/schemas/ExecutionStatus'
-                        - type: object
-                          properties:
-                            transfers:
-                              type: array
-                              description: Amounts sent to each recipient during this execution
-                              items:
-                                type: object
-                                required:
-                                  - recipient
-                                  - amount
-                                properties:
-                                  recipient:
-                                    allOf:
-                                      - $ref: '#/components/schemas/Address'
-                                  amount:
-                                    type: string
-                                    description: Amount sent to recipient, as a decimal string
-                                    example: '10.3'
+                allOf:
+                  - $ref: '#/components/schemas/StrategyStatus'
+                  - type: object
+                    properties:
+                      depositAddress:
+                        allOf:
+                          - $ref: '#/components/schemas/Address'
+                        description: Address of the created Safe wallet
+                      executions:
+                        type: array
+                        description: Most recent executions, ordered by timestamp descending
+                        items:
+                          description: Status of a single execution of the strategy
+                          allOf:
+                            - $ref: '#/components/schemas/ExecutionStatus'
+                            - type: object
+                              properties:
+                                transfers:
+                                  type: array
+                                  description: Amounts sent to each recipient during this execution
+                                  items:
+                                    type: object
+                                    required:
+                                      - recipient
+                                      - amount
+                                    properties:
+                                      recipient:
+                                        allOf:
+                                          - $ref: '#/components/schemas/Address'
+                                      amount:
+                                        type: string
+                                        description: Amount sent to recipient, as a decimal string
+                                        example: '10.3'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1127,7 +1110,34 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StrategyStatus'
+                allOf:
+                  - $ref: '#/components/schemas/StrategyStatus'
+                  - type: object
+                    properties:
+                      portfolio:
+                        allOf:
+                          - $ref: '#/components/schemas/PortfolioSnapshot'
+                          - type: object
+                            properties:
+                              totalSell:
+                                type: string
+                                description: >-
+                                  Total amount of tokenIn spent across all
+                                  executions, as a decimal string
+                                example: '105.0'
+                              totalBuy:
+                                type: string
+                                description: >-
+                                  Total amount of tokenOut received across
+                                  all executions, as a decimal string
+                                example: '0.031'
+                              averagePrice:
+                                type: string
+                                description: >-
+                                  Average USD price paid per unit of
+                                  tokenOut across all executions, as a
+                                  decimal string
+                                example: '3387.10'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1261,7 +1271,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StrategyStatus'
+                allOf:
+                  - $ref: '#/components/schemas/StrategyStatus'
+                  - type: object
+                    properties:
+                      portfolio:
+                        allOf:
+                          - $ref: '#/components/schemas/PortfolioSnapshot'
+                          - type: object
+                            properties:
+                              currentPrice:
+                                type: string
+                                description: Current USD price per tokenIn
+                                example: '2450.30'
+                              stopLossPrice:
+                                type: string
+                                description: >-
+                                  USD price per tokenIn at or below which
+                                  a stop-loss swap triggers. Omitted if
+                                  disabled.
+                                example: '1500.00'
+                              takeProfitPrice:
+                                type: string
+                                description: >-
+                                  USD price per tokenIn at or above which
+                                  a take-profit swap triggers. Omitted if
+                                  disabled.
+                                example: '3000.00'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1403,7 +1439,43 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StrategyStatus'
+                allOf:
+                  - $ref: '#/components/schemas/StrategyStatus'
+                  - type: object
+                    properties:
+                      portfolio:
+                        allOf:
+                          - $ref: '#/components/schemas/PortfolioSnapshot'
+                          - type: object
+                            properties:
+                              currentAllocations:
+                                type: array
+                                description: >-
+                                  Current share of the portfolio held in
+                                  each token, alongside its target
+                                items:
+                                  type: object
+                                  required:
+                                    - token
+                                    - targetBps
+                                    - currentBps
+                                  properties:
+                                    token:
+                                      allOf:
+                                        - $ref: '#/components/schemas/Address'
+                                      description: Token address
+                                    targetBps:
+                                      type: integer
+                                      description: Target share of the portfolio, in basis points (e.g. 5000 = 50%)
+                                      minimum: 0
+                                      maximum: 10000
+                                      example: 5000
+                                    currentBps:
+                                      type: integer
+                                      description: Current share of the portfolio, in basis points (e.g. 5230 = 52.3%)
+                                      minimum: 0
+                                      maximum: 10000
+                                      example: 5230
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1547,7 +1619,30 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StrategyStatus'
+                allOf:
+                  - $ref: '#/components/schemas/StrategyStatus'
+                  - type: object
+                    properties:
+                      portfolio:
+                        allOf:
+                          - $ref: '#/components/schemas/PortfolioSnapshot'
+                          - type: object
+                            properties:
+                              currentProtocol:
+                                type: string
+                                description: Lending protocol the deposit currently sits in
+                                enum:
+                                  - aave
+                                  - compound
+                                  - morpho
+                                  - spark
+                                example: aave
+                              currentApy:
+                                type: string
+                                description: >-
+                                  Current APY of the deposit's pool, in
+                                  percent as a decimal string
+                                example: '4.85'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1966,6 +2061,44 @@ components:
           description: >-
             Transaction hash on destinationChainId. Present only when
             destinationChainId differs from sourceChainId.
+    PortfolioSnapshot:
+      type: object
+      description: Snapshot of token balances relevant to a strategy and their USD value
+      required:
+        - timestamp
+        - totalUsdValue
+        - balances
+      properties:
+        timestamp:
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+          description: Timestamp the snapshot was taken
+        totalUsdValue:
+          type: string
+          description: Total USD value of balances, as a decimal string
+          example: '123456.78'
+        balances:
+          type: array
+          description: Balance of each token relevant to the strategy
+          items:
+            type: object
+            required:
+              - token
+              - amount
+              - usdValue
+            properties:
+              token:
+                allOf:
+                  - $ref: '#/components/schemas/Address'
+                description: Token address. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+              amount:
+                type: string
+                description: Token balance, as a decimal string
+                example: '10.5'
+              usdValue:
+                type: string
+                description: USD value of the balance, as a decimal string
+                example: '35245.67'
     StrategyStatus:
       type: object
       description: Status of a recurring assets management strategy and its most recent executions
@@ -2003,6 +2136,11 @@ components:
                     description: Single-chain or cross-chain swaps that occurred during this execution
                     items:
                       $ref: '#/components/schemas/Swap'
+        portfolio:
+          allOf:
+            - $ref: '#/components/schemas/PortfolioSnapshot'
+          description: >-
+            Current balances and information relevant to this strategy
     Settler:
       type: object
       required:
