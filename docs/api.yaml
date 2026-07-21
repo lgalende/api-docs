@@ -23,6 +23,20 @@ tags:
     description: >-
       Basic wallet operations. Compute EIP-712 data to sign via
       `POST /{action}/data`, then submit the signature via `POST /{action}`
+  - name: Swap
+    description: >-
+      Single-chain and recurring swap-based actions. Compute EIP-712 data
+      to sign via `POST /{action}/data`, then submit the signature via
+      `POST /{action}`
+  - name: Bridge
+    description: >-
+      Cross-chain token transfers. Compute EIP-712 data to sign via
+      `POST /{action}/data`, then submit the signature via `POST /{action}`
+  - name: Earn
+    description: >-
+      Lending, staking and yield strategies. Compute EIP-712 data
+      to sign via `POST /{action}/data`, then submit the signature via
+      `POST /{action}`
   - name: Assets management
     description: >-
       Automated strategies that manage a portfolio over time. Compute
@@ -403,7 +417,7 @@ paths:
   /swaps:
     post:
       tags:
-        - Core actions
+        - Swap
       description: Submit the signature to execute the swap
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
@@ -419,7 +433,7 @@ paths:
   /swaps/data:
     post:
       tags:
-        - Core actions
+        - Swap
       description: >-
         Computes EIP-712 data to be signed to create a single-chain swap
         operation.
@@ -510,7 +524,7 @@ paths:
   /swaps/{sig}:
     get:
       tags:
-        - Core actions
+        - Swap
       description: Get the status of a swap execution
       parameters:
         - name: sig
@@ -547,7 +561,7 @@ paths:
   /bridges:
     post:
       tags:
-        - Core actions
+        - Bridge
       description: Submit the signature to execute the bridge
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
@@ -563,7 +577,7 @@ paths:
   /bridges/data:
     post:
       tags:
-        - Core actions
+        - Bridge
       description: >-
         Computes EIP-712 data to be signed to move a token from one chain to
         another.
@@ -654,7 +668,7 @@ paths:
   /bridges/{sig}:
     get:
       tags:
-        - Core actions
+        - Bridge
       description: Get the status of a bridge execution
       parameters:
         - name: sig
@@ -698,7 +712,7 @@ paths:
   /lendings:
     post:
       tags:
-        - Core actions
+        - Earn
       description: Submit the signature to execute the deposit into a lending pool
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
@@ -714,7 +728,7 @@ paths:
   /lendings/data:
     post:
       tags:
-        - Core actions
+        - Earn
       description: >-
         Computes EIP-712 data to be signed to deposit a token into a
         lending pool.
@@ -792,7 +806,7 @@ paths:
   /lendings/{sig}:
     get:
       tags:
-        - Core actions
+        - Earn
       description: Get the status of a lending deposit execution
       parameters:
         - name: sig
@@ -988,7 +1002,7 @@ paths:
   /dca:
     post:
       tags:
-        - Assets management
+        - Swap
       description: Submit the signature to create the DCA strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -1004,7 +1018,7 @@ paths:
   /dca/data:
     post:
       tags:
-        - Assets management
+        - Swap
       description: >-
         Computes EIP-712 data to be signed to create a recurring DCA
         (dollar-cost averaging) strategy.
@@ -1095,7 +1109,7 @@ paths:
   /dca/{sig}:
     get:
       tags:
-        - Assets management
+        - Swap
       description: Get the status of the DCA strategy and its executions
       parameters:
         - name: sig
@@ -1145,7 +1159,7 @@ paths:
   /stop-loss:
     post:
       tags:
-        - Assets management
+        - Swap
       description: Submit the signature to create the stop-loss strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -1161,7 +1175,7 @@ paths:
   /stop-loss/data:
     post:
       tags:
-        - Assets management
+        - Swap
       description: >-
         Computes EIP-712 data to be signed to create a stop-loss strategy
         that monitors a token's price and swaps it once it falls to or
@@ -1242,7 +1256,7 @@ paths:
   /stop-loss/{sig}:
     get:
       tags:
-        - Assets management
+        - Swap
       description: Get the status of the stop-loss strategy and its executions
       parameters:
         - name: sig
@@ -1281,7 +1295,7 @@ paths:
   /take-profit:
     post:
       tags:
-        - Assets management
+        - Swap
       description: Submit the signature to create the take-profit strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -1297,7 +1311,7 @@ paths:
   /take-profit/data:
     post:
       tags:
-        - Assets management
+        - Swap
       description: >-
         Computes EIP-712 data to be signed to create a take-profit strategy
         that monitors a token's price and swaps it once it rises to or
@@ -1378,7 +1392,7 @@ paths:
   /take-profit/{sig}:
     get:
       tags:
-        - Assets management
+        - Swap
       description: Get the status of the take-profit strategy and its executions
       parameters:
         - name: sig
@@ -1595,7 +1609,7 @@ paths:
   /lending-rebalancing:
     post:
       tags:
-        - Assets management
+        - Earn
       description: Submit the signature to create the lending rebalancing strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -1611,7 +1625,7 @@ paths:
   /lending-rebalancing/data:
     post:
       tags:
-        - Assets management
+        - Earn
       description: >-
         Computes EIP-712 data to be signed to move a deposit to the
         highest-yielding of the selected lending markets, either once or as
@@ -1713,7 +1727,7 @@ paths:
   /lending-rebalancing/{sig}:
     get:
       tags:
-        - Assets management
+        - Earn
       description: >-
         Get the status of the lending rebalancing strategy and its
         executions
