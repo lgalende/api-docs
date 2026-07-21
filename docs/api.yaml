@@ -1142,11 +1142,11 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stop-loss-take-profit:
+  /stop-loss:
     post:
       tags:
         - Assets management
-      description: Submit the signature to create the stop-loss / take-profit strategy
+      description: Submit the signature to create the stop-loss strategy
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1158,14 +1158,14 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stop-loss-take-profit/data:
+  /stop-loss/data:
     post:
       tags:
         - Assets management
       description: >-
-        Computes EIP-712 data to be signed to create a stop-loss / take-profit
-        strategy that monitors a token's price and swaps it when a threshold
-        is hit.
+        Computes EIP-712 data to be signed to create a stop-loss strategy
+        that monitors a token's price and swaps it once it falls to or
+        below a threshold.
       requestBody:
         required: true
         content:
@@ -1176,6 +1176,7 @@ paths:
                 - chainId
                 - tokenIn
                 - tokenOut
+                - stopLossPrice
                 - wallet
                 - balanceBps
                 - slippageBps
@@ -1187,7 +1188,7 @@ paths:
                 tokenIn:
                   allOf:
                     - $ref: '#/components/schemas/Address'
-                  description: Token being monitored and sold when a threshold is hit. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                  description: Token being monitored and sold when the threshold is hit. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
                 tokenOut:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -1195,17 +1196,144 @@ paths:
                 stopLossPrice:
                   type: string
                   description: >-
-                    USD price per tokenIn at or below which to trigger a
-                    stop-loss swap, e.g. "1500.00". Omit to disable. At least
-                    one of `stopLossPrice` or `takeProfitPrice` is required.
+                    USD price per tokenIn at or below which to trigger the
+                    swap, e.g. "1500.00".
                   example: '1500.00'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address whose balance is monitored and from where the
+                    funds will be pulled. EOAs are not supported (unless
+                    they use proper EIP-7702 delegation).
+                balanceBps:
+                  type: integer
+                  description: >-
+                    Fraction of the tokenIn balance to swap, in basis points
+                    (e.g. 10000 = 100% (full balance), 3330 = 33.3%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 10000
+                slippageBps:
+                  type: integer
+                  description: Slippage tolerance for the swap, in basis points (e.g. 50 = 0.50%)
+                  minimum: 0
+                  maximum: 10000
+                  example: 50
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the tokenOut. Defaults to `wallet`.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the stop-loss strategy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /stop-loss/{sig}:
+    get:
+      tags:
+        - Assets management
+      description: Get the status of the stop-loss strategy and its executions
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /stop-loss
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the stop-loss strategy and its executions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StrategyStatus'
+                  - type: object
+                    properties:
+                      portfolio:
+                        allOf:
+                          - $ref: '#/components/schemas/PortfolioSnapshot'
+                          - type: object
+                            properties:
+                              currentPrice:
+                                type: string
+                                description: Current USD price per tokenIn
+                                example: '2450.30'
+                              stopLossPrice:
+                                type: string
+                                description: USD price per tokenIn at or below which the swap triggers
+                                example: '1500.00'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /take-profit:
+    post:
+      tags:
+        - Assets management
+      description: Submit the signature to create the take-profit strategy
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /take-profit/data:
+    post:
+      tags:
+        - Assets management
+      description: >-
+        Computes EIP-712 data to be signed to create a take-profit strategy
+        that monitors a token's price and swaps it once it rises to or
+        above a threshold.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - tokenIn
+                - tokenOut
+                - takeProfitPrice
+                - wallet
+                - balanceBps
+                - slippageBps
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the position exists
+                tokenIn:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token being monitored and sold when the threshold is hit. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                tokenOut:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to receive after the swap. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
                 takeProfitPrice:
                   type: string
                   description: >-
-                    USD price per tokenIn at or above which to trigger a
-                    take-profit swap, e.g. "3000.00". Omit to disable. At
-                    least one of `stopLossPrice` or `takeProfitPrice` is
-                    required.
+                    USD price per tokenIn at or above which to trigger the
+                    swap, e.g. "3000.00".
                   example: '3000.00'
                 wallet:
                   allOf:
@@ -1240,34 +1368,28 @@ paths:
                   example: '1.5'
       responses:
         '200':
-          description: >-
-            EIP-712 data to be signed to create the stop-loss / take-profit
-            strategy
+          description: EIP-712 data to be signed to create the take-profit strategy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /stop-loss-take-profit/{sig}:
+  /take-profit/{sig}:
     get:
       tags:
         - Assets management
-      description: >-
-        Get the status of the stop-loss / take-profit strategy and its
-        executions
+      description: Get the status of the take-profit strategy and its executions
       parameters:
         - name: sig
           in: path
           required: true
-          description: Signature submitted to POST /stop-loss-take-profit
+          description: Signature submitted to POST /take-profit
           schema:
             $ref: '#/components/schemas/Signature'
       responses:
         '200':
-          description: >-
-            Status of the stop-loss / take-profit strategy and its
-            executions
+          description: Status of the take-profit strategy and its executions
           content:
             application/json:
               schema:
@@ -1284,19 +1406,9 @@ paths:
                                 type: string
                                 description: Current USD price per tokenIn
                                 example: '2450.30'
-                              stopLossPrice:
-                                type: string
-                                description: >-
-                                  USD price per tokenIn at or below which
-                                  a stop-loss swap triggers. Omitted if
-                                  disabled.
-                                example: '1500.00'
                               takeProfitPrice:
                                 type: string
-                                description: >-
-                                  USD price per tokenIn at or above which
-                                  a take-profit swap triggers. Omitted if
-                                  disabled.
+                                description: USD price per tokenIn at or above which the swap triggers
                                 example: '3000.00'
         '400':
           $ref: '#/components/responses/BadRequest'
