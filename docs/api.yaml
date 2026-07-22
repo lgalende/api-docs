@@ -414,6 +414,135 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+  /calls:
+    post:
+      tags:
+        - Core actions
+      description: Submit the signature to execute the call
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /calls/data:
+    post:
+      tags:
+        - Core actions
+      description: >-
+        Computes EIP-712 data to be signed to execute one or more arbitrary
+        contract calls from a wallet, atomically.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - wallet
+                - calls
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the calls will be executed
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that executes the calls. EOAs are not
+                    supported (unless they use proper EIP-7702 delegation).
+                description:
+                  type: string
+                  description: >-
+                    Human-readable label describing what the calls do
+                  example: 'Approve USDC'
+                calls:
+                  type: array
+                  description: >-
+                    Calls to execute, in order and atomically. If any
+                    call reverts, the whole batch reverts.
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - to
+                      - data
+                    properties:
+                      to:
+                        allOf:
+                          - $ref: '#/components/schemas/Address'
+                        description: Target contract address to call
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: ABI-encoded calldata for the call
+                      value:
+                        allOf:
+                          - $ref: '#/components/schemas/BigInteger'
+                        description: >-
+                          Native token value to send with this call, in
+                          wei. Defaults to '0'.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to execute the calls
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /calls/{sig}:
+    get:
+      tags:
+        - Core actions
+      description: Get the status of a call execution
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /calls
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the call execution
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExecutionStatus'
+                  - type: object
+                    properties:
+                      txHash:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: >-
+                          Transaction hash. Present only when status is
+                          `succeeded`.
+                      returnData:
+                        type: array
+                        description: >-
+                          Raw return data from each call, in the same order
+                          as the request's `calls`. Present only when
+                          status is `succeeded`.
+                        items:
+                          $ref: '#/components/schemas/HexString'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /swaps:
     post:
       tags:
@@ -2608,8 +2737,9 @@ components:
             - $ref: '#/components/schemas/HexString'
           description: ABI-encoded calldata for `approve(spender, amount)`
         value:
-          type: string
-          description: Native token value to send with the transaction. Always `"0"`.
+          allOf:
+            - $ref: '#/components/schemas/BigInteger'
+          description: Native token value to send with the transaction, in wei. Always `"0"`.
           example: '0'
     ApprovalRequirement:
       type: object
