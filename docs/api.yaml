@@ -835,6 +835,133 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+  /stakings:
+    post:
+      tags:
+        - Earn
+      description: Submit the signature to execute the deposit into a staking protocol
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /stakings/data:
+    post:
+      tags:
+        - Earn
+      description: >-
+        Computes EIP-712 data to be signed to deposit ETH into a staking
+        protocol.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - token
+                - protocol
+                - amount
+                - wallet
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the deposit will be made
+                token:
+                  type: string
+                  description: >-
+                    Underlying token to deposit. WETH is unwrapped to ETH
+                    before staking.
+                  enum:
+                    - ETH
+                    - WETH
+                protocol:
+                  type: string
+                  description: Staking protocol to deposit into
+                  enum:
+                    - lido
+                    - rocketpool
+                    - coinbase
+                amount:
+                  type: string
+                  description: Amount of token to deposit, as a decimal string
+                  example: '10.5'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address from where the funds will be pulled and that
+                    receives the staking position
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the deposit
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - signaturePayload
+                  - requiredApprovals
+                properties:
+                  signaturePayload:
+                    allOf:
+                      - $ref: '#/components/schemas/TriggerSignaturePayload'
+                    description: EIP-712 data to be signed to create the deposit
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions that must be signed and
+                      submitted alongside the action signature. Empty when
+                      the wallet has already approved a sufficient amount.
+                    items:
+                      $ref: '#/components/schemas/ApprovalRequirement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /stakings/{sig}:
+    get:
+      tags:
+        - Earn
+      description: Get the status of a staking deposit execution
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /stakings
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the staking deposit execution
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExecutionStatus'
+                  - type: object
+                    properties:
+                      txHash:
+                        allOf:
+                          - $ref: '#/components/schemas/HexString'
+                        description: >-
+                          Transaction hash. Present only when status is
+                          `succeeded`.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /deposit-splitting:
     post:
       tags:
