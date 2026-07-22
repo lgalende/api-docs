@@ -1428,6 +1428,137 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+  /limit-order:
+    post:
+      tags:
+        - Swap
+      description: Submit the signature to create the limit order
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /limit-order/data:
+    post:
+      tags:
+        - Swap
+      description: >-
+        Computes EIP-712 data to be signed to create a limit order that
+        swaps a fixed amount of tokenIn for tokenOut once the market rate
+        makes the requested limitAmountOut achievable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - tokenIn
+                - tokenOut
+                - amount
+                - limitAmountOut
+                - wallet
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the swap will be executed
+                tokenIn:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to swap from. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                tokenOut:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Token to swap to. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+                amount:
+                  type: string
+                  description: Amount of tokenIn to swap, as a decimal string
+                  example: '0.05'
+                limitAmountOut:
+                  type: string
+                  description: >-
+                    Minimum amount of tokenOut to receive, as a decimal
+                    string. The order executes once the market rate makes
+                    this achievable.
+                  example: '150.0'
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address from where the funds will be pulled. EOAs are
+                    not supported (unless they use proper EIP-7702 delegation).
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the tokenOut. Defaults to `wallet`.
+                expiresAt:
+                  allOf:
+                    - $ref: '#/components/schemas/Timestamp'
+                  description: >-
+                    Timestamp after which the order is cancelled if it
+                    hasn't filled. Use 0 for no expiration. Defaults to 0.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to create the limit order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /limit-order/{sig}:
+    get:
+      tags:
+        - Swap
+      description: Get the status of the limit order and its executions
+      parameters:
+        - name: sig
+          in: path
+          required: true
+          description: Signature submitted to POST /limit-order
+          schema:
+            $ref: '#/components/schemas/Signature'
+      responses:
+        '200':
+          description: Status of the limit order and its executions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StrategyStatus'
+                  - type: object
+                    properties:
+                      portfolio:
+                        allOf:
+                          - $ref: '#/components/schemas/PortfolioSnapshot'
+                          - type: object
+                            properties:
+                              currentAmountOut:
+                                type: string
+                                description: Amount of tokenOut currently obtainable for amount of tokenIn
+                                example: '142.5'
+                              limitAmountOut:
+                                type: string
+                                description: Minimum amount of tokenOut required to trigger execution
+                                example: '150.0'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /portfolio-rebalancing:
     post:
       tags:
