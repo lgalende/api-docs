@@ -341,49 +341,6 @@ paths:
                     $ref: '#/components/schemas/BigInteger'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /wallets/{wallet}/allowances:
-    post:
-      tags:
-        - Wallets management
-      description: Get the token amount a wallet has allowed a spender to use
-      parameters:
-        - name: wallet
-          in: path
-          required: true
-          description: Wallet address to query
-          schema:
-            $ref: '#/components/schemas/Address'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - chainId
-                - token
-                - spender
-              properties:
-                chainId:
-                  $ref: '#/components/schemas/ChainId'
-                token:
-                  $ref: '#/components/schemas/Address'
-                spender:
-                  $ref: '#/components/schemas/Address'
-      responses:
-        '200':
-          description: Allowed token amount
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - amount
-                properties:
-                  amount:
-                    $ref: '#/components/schemas/BigInteger'
-        '400':
-          $ref: '#/components/responses/BadRequest'
   /transfers:
     post:
       tags:
