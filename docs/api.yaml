@@ -1701,8 +1701,8 @@ paths:
         - Swap
       description: >-
         Computes EIP-712 data to be signed to create a stop-loss strategy
-        that monitors a token's price and swaps it once it falls to or
-        below a threshold.
+        that monitors a token's exchange rate and swaps it once it falls
+        to or below a threshold.
       requestBody:
         required: true
         content:
@@ -1713,7 +1713,7 @@ paths:
                 - chainId
                 - tokenIn
                 - tokenOut
-                - stopLossPrice
+                - stopLossRate
                 - wallet
                 - balanceBps
                 - slippageBps
@@ -1730,12 +1730,12 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/Address'
                   description: Token to receive after the swap. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
-                stopLossPrice:
+                stopLossRate:
                   type: string
                   description: >-
-                    USD price per tokenIn at or below which to trigger the
-                    swap, e.g. "1500.00".
-                  example: '1500.00'
+                    Amount of tokenOut received per unit of tokenIn, at or
+                    below which to trigger the swap.
+                  example: '0.00041'
                 wallet:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -1811,14 +1811,14 @@ paths:
                           - $ref: '#/components/schemas/PortfolioSnapshot'
                           - type: object
                             properties:
-                              currentPrice:
+                              currentRate:
                                 type: string
-                                description: Current USD price per tokenIn
-                                example: '2450.30'
-                              stopLossPrice:
+                                description: Current amount of tokenOut received per unit of tokenIn
+                                example: '0.00039'
+                              stopLossRate:
                                 type: string
-                                description: USD price per tokenIn at or below which the swap triggers
-                                example: '1500.00'
+                                description: Amount of tokenOut received per unit of tokenIn at or below which the swap triggers
+                                example: '0.00041'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1845,8 +1845,8 @@ paths:
         - Swap
       description: >-
         Computes EIP-712 data to be signed to create a take-profit strategy
-        that monitors a token's price and swaps it once it rises to or
-        above a threshold.
+        that monitors a token's exchange rate and swaps it once it rises
+        to or above a threshold.
       requestBody:
         required: true
         content:
@@ -1857,7 +1857,7 @@ paths:
                 - chainId
                 - tokenIn
                 - tokenOut
-                - takeProfitPrice
+                - takeProfitRate
                 - wallet
                 - balanceBps
                 - slippageBps
@@ -1874,12 +1874,12 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/Address'
                   description: Token to receive after the swap. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
-                takeProfitPrice:
+                takeProfitRate:
                   type: string
                   description: >-
-                    USD price per tokenIn at or above which to trigger the
-                    swap, e.g. "3000.00".
-                  example: '3000.00'
+                    Amount of tokenOut received per unit of tokenIn, at or
+                    above which to trigger the swap.
+                  example: '0.00045'
                 wallet:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -1955,14 +1955,14 @@ paths:
                           - $ref: '#/components/schemas/PortfolioSnapshot'
                           - type: object
                             properties:
-                              currentPrice:
+                              currentRate:
                                 type: string
-                                description: Current USD price per tokenIn
-                                example: '2450.30'
-                              takeProfitPrice:
+                                description: Current amount of tokenOut received per unit of tokenIn
+                                example: '0.00043'
+                              takeProfitRate:
                                 type: string
-                                description: USD price per tokenIn at or above which the swap triggers
-                                example: '3000.00'
+                                description: Amount of tokenOut received per unit of tokenIn at or above which the swap triggers
+                                example: '0.00045'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1990,7 +1990,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to create a limit order that
         swaps a fixed amount of tokenIn for tokenOut once the market rate
-        makes the requested limitAmountOut achievable.
+        reaches the requested limitRate.
       requestBody:
         required: true
         content:
@@ -2002,7 +2002,7 @@ paths:
                 - tokenIn
                 - tokenOut
                 - amount
-                - limitAmountOut
+                - limitRate
                 - wallet
               properties:
                 chainId:
@@ -2021,13 +2021,12 @@ paths:
                   type: string
                   description: Amount of tokenIn to swap, as a decimal string
                   example: '0.05'
-                limitAmountOut:
+                limitRate:
                   type: string
                   description: >-
-                    Minimum amount of tokenOut to receive, as a decimal
-                    string. The order executes once the market rate makes
-                    this achievable.
-                  example: '150.0'
+                    Amount of tokenOut received per unit of tokenIn, at or
+                    below which to trigger the swap.
+                  example: '3000.0'
                 wallet:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -2094,14 +2093,14 @@ paths:
                           - $ref: '#/components/schemas/PortfolioSnapshot'
                           - type: object
                             properties:
-                              currentAmountOut:
+                              currentRate:
                                 type: string
-                                description: Amount of tokenOut currently obtainable for amount of tokenIn
-                                example: '142.5'
-                              limitAmountOut:
+                                description: Current amount of tokenOut received per unit of tokenIn
+                                example: '2950.0'
+                              limitRate:
                                 type: string
-                                description: Minimum amount of tokenOut required to trigger execution
-                                example: '150.0'
+                                description: Amount of tokenOut received per unit of tokenIn at or above which the order executes
+                                example: '3000.0'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
