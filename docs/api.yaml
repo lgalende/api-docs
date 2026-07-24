@@ -260,21 +260,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /wallets/safe/{sig}:
+  /wallets/safe/{id}:
     get:
       tags:
         - Wallets management
       description: Get the status of a Safe wallet creation execution
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /wallets/safe
+          description: ID returned by POST /wallets/safe/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the wallet creation execution
@@ -410,9 +418,12 @@ paths:
               schema:
                 type: object
                 required:
+                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -427,18 +438,18 @@ paths:
                       $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /transfers/{sig}:
+  /transfers/{id}:
     get:
       tags:
         - Transfers
       description: Get the status of a transfer execution
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /transfers
+          description: ID returned by POST /transfers/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the transfer execution
@@ -545,21 +556,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /calls/{sig}:
+  /calls/{id}:
     get:
       tags:
         - Contract calls
       description: Get the status of a call execution
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /calls
+          description: ID returned by POST /calls/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the call execution
@@ -678,9 +697,12 @@ paths:
               schema:
                 type: object
                 required:
+                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -695,18 +717,18 @@ paths:
                       $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /swaps/{sig}:
+  /swaps/{id}:
     get:
       tags:
         - Swap
       description: Get the status of a swap execution
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /swaps
+          description: ID returned by POST /swaps/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the swap execution
@@ -822,9 +844,12 @@ paths:
               schema:
                 type: object
                 required:
+                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -839,18 +864,18 @@ paths:
                       $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /bridges/{sig}:
+  /bridges/{id}:
     get:
       tags:
         - Bridge
       description: Get the status of a bridge execution
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /bridges
+          description: ID returned by POST /bridges/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the bridge execution
@@ -960,9 +985,12 @@ paths:
               schema:
                 type: object
                 required:
+                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -977,18 +1005,18 @@ paths:
                       $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /lendings/{sig}:
+  /lendings/{id}:
     get:
       tags:
         - Earn
       description: Get the status of a lending deposit execution
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /lendings
+          description: ID returned by POST /lendings/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the lending deposit execution
@@ -1087,9 +1115,12 @@ paths:
               schema:
                 type: object
                 required:
+                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -1104,18 +1135,18 @@ paths:
                       $ref: '#/components/schemas/ApprovalRequirement'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /stakings/{sig}:
+  /stakings/{id}:
     get:
       tags:
         - Earn
       description: Get the status of a staking deposit execution
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /stakings
+          description: ID returned by POST /stakings/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the staking deposit execution
@@ -1241,22 +1272,30 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /deposit-splitting/{sig}:
+  /deposit-splitting/{id}:
     get:
       tags:
         - Assets management
       description: >-
         Get the status of the deposit splitting strategy and its executions
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /deposit-splitting
+          description: ID returned by POST /deposit-splitting/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the deposit splitting strategy and its executions
@@ -1404,21 +1443,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /dca/{sig}:
+  /dca/{id}:
     get:
       tags:
         - Swap
       description: Get the status of the DCA strategy and its executions
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /dca
+          description: ID returned by POST /dca/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the DCA strategy and its executions
@@ -1551,21 +1598,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /stop-loss/{sig}:
+  /stop-loss/{id}:
     get:
       tags:
         - Swap
       description: Get the status of the stop-loss strategy and its executions
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /stop-loss
+          description: ID returned by POST /stop-loss/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the stop-loss strategy and its executions
@@ -1687,21 +1742,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /take-profit/{sig}:
+  /take-profit/{id}:
     get:
       tags:
         - Swap
       description: Get the status of the take-profit strategy and its executions
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /take-profit
+          description: ID returned by POST /take-profit/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the take-profit strategy and its executions
@@ -1818,21 +1881,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /limit-order/{sig}:
+  /limit-order/{id}:
     get:
       tags:
         - Swap
       description: Get the status of the limit order and its executions
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /limit-order
+          description: ID returned by POST /limit-order/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Status of the limit order and its executions
@@ -1973,10 +2044,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /portfolio-rebalancing/{sig}:
+  /portfolio-rebalancing/{id}:
     get:
       tags:
         - Assets management
@@ -1984,12 +2063,12 @@ paths:
         Get the status of the portfolio rebalancing strategy and its
         executions
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /portfolio-rebalancing
+          description: ID returned by POST /portfolio-rebalancing/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: >-
@@ -2153,10 +2232,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /lending-rebalancing/{sig}:
+  /lending-rebalancing/{id}:
     get:
       tags:
         - Earn
@@ -2164,12 +2251,12 @@ paths:
         Get the status of the lending rebalancing strategy and its
         executions
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /lending-rebalancing
+          description: ID returned by POST /lending-rebalancing/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: >-
@@ -2301,10 +2388,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TriggerSignaturePayload'
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /stablecoin-consolidation/{sig}:
+  /stablecoin-consolidation/{id}:
     get:
       tags:
         - Assets management
@@ -2312,12 +2407,12 @@ paths:
         Get the status of the stablecoin consolidation strategy and its
         executions
       parameters:
-        - name: sig
+        - name: id
           in: path
           required: true
-          description: Signature submitted to POST /stablecoin-consolidation
+          description: ID returned by POST /stablecoin-consolidation/data
           schema:
-            $ref: '#/components/schemas/Signature'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: >-
@@ -2375,8 +2470,13 @@ components:
           schema:
             type: object
             required:
+              - id
               - signature
             properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/UUID'
+                description: ID returned by the corresponding `/data` call
               signature:
                 $ref: '#/components/schemas/TriggerSignature'
     SignatureSubmissionWithApprovals:
@@ -2386,8 +2486,13 @@ components:
           schema:
             type: object
             required:
+              - id
               - signature
             properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/UUID'
+                description: ID returned by the corresponding `/data` call
               signature:
                 $ref: '#/components/schemas/TriggerSignature'
               approvals:
@@ -2407,9 +2512,9 @@ components:
           schema:
             type: object
             properties:
-              sig:
+              id:
                 allOf:
-                  - $ref: '#/components/schemas/Signature'
+                  - $ref: '#/components/schemas/UUID'
     BadRequest:
       description: Bad request — invalid parameters or body
       content:
@@ -2450,6 +2555,13 @@ components:
       type: string
       description: A 65-byte hex-encoded ECDSA signature (130 hex chars + 0x prefix).
       example: 0xabc...def
+    UUID:
+      type: string
+      format: uuid
+      description: >-
+        Identifier for an action request, returned by `POST /{action}/data`
+        and used to submit its signature and to track its status.
+      example: 550e8400-e29b-41d4-a716-446655440000
     BigInteger:
       type: string
       description: A non-negative integer represented as a decimal string.
