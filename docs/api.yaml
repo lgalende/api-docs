@@ -1037,6 +1037,181 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+  /lending-rebalancing:
+    post:
+      tags:
+        - Earn
+      description: Submit the signature to create the lending rebalancing strategy
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /lending-rebalancing/data:
+    post:
+      tags:
+        - Earn
+      description: >-
+        Computes EIP-712 data to be signed to move a deposit to the
+        highest-yielding of the selected lending markets, either once or as
+        a recurring strategy that keeps monitoring APY.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chainId
+                - token
+                - protocols
+                - rotationThresholdBps
+                - wallet
+              properties:
+                chainId:
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
+                  description: Chain ID where the rebalancing will take place
+                token:
+                  type: string
+                  description: Underlying token to lend
+                  enum:
+                    - USDC
+                    - USDT
+                protocols:
+                  type: array
+                  description: >-
+                    Lending protocols to consider when rotating. The
+                    highest-yielding pool for `token` on `chainId` is resolved
+                    for each selected protocol.
+                  minItems: 1
+                  items:
+                    type: string
+                    enum:
+                      - aave
+                      - compound
+                      - morpho
+                      - spark
+                    example: aave
+                rotationThresholdBps:
+                  type: integer
+                  description: >-
+                    Minimum APY improvement required before
+                    rotating to a different pool, in basis points (e.g. 50 = 0.50%)
+                  minimum: 0
+                  example: 50
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address whose deposit is rebalanced — holds the funds and
+                    receives the output. EOAs are not supported (unless
+                    they use proper EIP-7702 delegation).
+                startingPercentageBps:
+                  type: integer
+                  description: >-
+                    Percentage of the token balance to deposit on the first
+                    run, in basis points (e.g. 10000 = 100%). Defaults to 10000.
+                  minimum: 0
+                  maximum: 10000
+                  example: 10000
+                frequency:
+                  type: string
+                  description: >-
+                    How often APY is checked and the position is rebalanced
+                    (if needed). Omit to rebalance once, immediately.
+                  enum:
+                    - hourly
+                    - daily
+                    - weekly
+                    - monthly
+                  example: daily
+                endDate:
+                  allOf:
+                    - $ref: '#/components/schemas/Timestamp'
+                  description: >-
+                    Timestamp after which the strategy stops executing. Only
+                    relevant when `frequency` is set. Use 0 for no end date.
+                    Defaults to 0.
+                feeAmount:
+                  type: string
+                  description: >-
+                    Max fee in USD. Defaults to 0.
+                  example: '1.5'
+      responses:
+        '200':
+          description: >-
+            EIP-712 data to be signed to create the lending rebalancing
+            strategy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - signaturePayload
+                properties:
+                  id:
+                    $ref: '#/components/schemas/UUID'
+                  signaturePayload:
+                    $ref: '#/components/schemas/TriggerSignaturePayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /lending-rebalancing/{id}:
+    get:
+      tags:
+        - Earn
+      description: >-
+        Get the status of the lending rebalancing strategy and its
+        executions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID returned by POST /lending-rebalancing/data
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: >-
+            Status of the lending rebalancing strategy and its executions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StrategyStatus'
+                  - type: object
+                    properties:
+                      portfolio:
+                        allOf:
+                          - $ref: '#/components/schemas/PortfolioSnapshot'
+                          - type: object
+                            properties:
+                              currentProtocol:
+                                type: string
+                                description: Lending protocol the deposit currently sits in
+                                enum:
+                                  - aave
+                                  - compound
+                                  - morpho
+                                  - spark
+                                example: aave
+                              currentApy:
+                                type: string
+                                description: >-
+                                  Current APY of the deposit's pool, in
+                                  percent as a decimal string
+                                example: '4.85'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /stakings:
     post:
       tags:
@@ -2113,181 +2288,6 @@ paths:
                                       minimum: 0
                                       maximum: 10000
                                       example: 5230
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /lending-rebalancing:
-    post:
-      tags:
-        - Earn
-      description: Submit the signature to create the lending rebalancing strategy
-      requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmission'
-      responses:
-        '200':
-          $ref: '#/components/responses/SignatureSubmitted'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /lending-rebalancing/data:
-    post:
-      tags:
-        - Earn
-      description: >-
-        Computes EIP-712 data to be signed to move a deposit to the
-        highest-yielding of the selected lending markets, either once or as
-        a recurring strategy that keeps monitoring APY.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - chainId
-                - token
-                - protocols
-                - rotationThresholdBps
-                - wallet
-              properties:
-                chainId:
-                  allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the rebalancing will take place
-                token:
-                  type: string
-                  description: Underlying token to lend
-                  enum:
-                    - USDC
-                    - USDT
-                protocols:
-                  type: array
-                  description: >-
-                    Lending protocols to consider when rotating. The
-                    highest-yielding pool for `token` on `chainId` is resolved
-                    for each selected protocol.
-                  minItems: 1
-                  items:
-                    type: string
-                    enum:
-                      - aave
-                      - compound
-                      - morpho
-                      - spark
-                    example: aave
-                rotationThresholdBps:
-                  type: integer
-                  description: >-
-                    Minimum APY improvement required before
-                    rotating to a different pool, in basis points (e.g. 50 = 0.50%)
-                  minimum: 0
-                  example: 50
-                wallet:
-                  allOf:
-                    - $ref: '#/components/schemas/Address'
-                  description: >-
-                    Address whose deposit is rebalanced — holds the funds and
-                    receives the output. EOAs are not supported (unless
-                    they use proper EIP-7702 delegation).
-                startingPercentageBps:
-                  type: integer
-                  description: >-
-                    Percentage of the token balance to deposit on the first
-                    run, in basis points (e.g. 10000 = 100%). Defaults to 10000.
-                  minimum: 0
-                  maximum: 10000
-                  example: 10000
-                frequency:
-                  type: string
-                  description: >-
-                    How often APY is checked and the position is rebalanced
-                    (if needed). Omit to rebalance once, immediately.
-                  enum:
-                    - hourly
-                    - daily
-                    - weekly
-                    - monthly
-                  example: daily
-                endDate:
-                  allOf:
-                    - $ref: '#/components/schemas/Timestamp'
-                  description: >-
-                    Timestamp after which the strategy stops executing. Only
-                    relevant when `frequency` is set. Use 0 for no end date.
-                    Defaults to 0.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
-      responses:
-        '200':
-          description: >-
-            EIP-712 data to be signed to create the lending rebalancing
-            strategy
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - id
-                  - signaturePayload
-                properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-  /lending-rebalancing/{id}:
-    get:
-      tags:
-        - Earn
-      description: >-
-        Get the status of the lending rebalancing strategy and its
-        executions
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /lending-rebalancing/data
-          schema:
-            $ref: '#/components/schemas/UUID'
-      responses:
-        '200':
-          description: >-
-            Status of the lending rebalancing strategy and its executions
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/StrategyStatus'
-                  - type: object
-                    properties:
-                      portfolio:
-                        allOf:
-                          - $ref: '#/components/schemas/PortfolioSnapshot'
-                          - type: object
-                            properties:
-                              currentProtocol:
-                                type: string
-                                description: Lending protocol the deposit currently sits in
-                                enum:
-                                  - aave
-                                  - compound
-                                  - morpho
-                                  - spark
-                                example: aave
-                              currentApy:
-                                type: string
-                                description: >-
-                                  Current APY of the deposit's pool, in
-                                  percent as a decimal string
-                                example: '4.85'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
