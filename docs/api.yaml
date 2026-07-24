@@ -19,10 +19,15 @@ tags:
       sign via `POST /wallets/safe/data`, then submit the signature via
       `POST /wallets/safe`. For custodial EOA wallets, create directly via
       `POST /wallets/eoa`
-  - name: Core actions
+  - name: Transfers
     description: >-
-      Basic wallet operations. Compute EIP-712 data to sign via
-      `POST /{action}/data`, then submit the signature via `POST /{action}`
+      Send tokens to a recipient. Compute EIP-712 data to sign via
+      `POST /transfers/data`, then submit the signature via `POST /transfers`
+  - name: Contract calls
+    description: >-
+      Execute arbitrary contract calls from a wallet. Compute EIP-712 data
+      to sign via `POST /calls/data`, then submit the signature via
+      `POST /calls`. EOAs are not supported (unless they use proper EIP-7702 delegation)
   - name: Swap
     description: >-
       Single-chain and recurring swap-based actions. Compute EIP-712 data
@@ -31,7 +36,7 @@ tags:
   - name: Bridge
     description: >-
       Cross-chain token transfers. Compute EIP-712 data to sign via
-      `POST /{action}/data`, then submit the signature via `POST /{action}`
+      `POST /bridges/data`, then submit the signature via `POST /bridges`
   - name: Earn
     description: >-
       Lending, staking and yield strategies. Compute EIP-712 data
@@ -382,7 +387,7 @@ paths:
   /transfers:
     post:
       tags:
-        - Core actions
+        - Transfers
       description: Submit the signature to execute the transfer
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
@@ -398,7 +403,7 @@ paths:
   /transfers/data:
     post:
       tags:
-        - Core actions
+        - Transfers
       description: >-
         Computes EIP-712 data to be signed to transfer tokens from a wallet
         to a recipient.
@@ -468,7 +473,7 @@ paths:
   /transfers/{sig}:
     get:
       tags:
-        - Core actions
+        - Transfers
       description: Get the status of a transfer execution
       parameters:
         - name: sig
@@ -500,7 +505,7 @@ paths:
   /calls:
     post:
       tags:
-        - Core actions
+        - Contract calls
       description: Submit the signature to execute the call
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -516,7 +521,7 @@ paths:
   /calls/data:
     post:
       tags:
-        - Core actions
+        - Contract calls
       description: >-
         Computes EIP-712 data to be signed to execute one or more arbitrary
         contract calls from a wallet, atomically.
@@ -589,7 +594,7 @@ paths:
   /calls/{sig}:
     get:
       tags:
-        - Core actions
+        - Contract calls
       description: Get the status of a call execution
       parameters:
         - name: sig
