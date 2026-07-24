@@ -433,9 +433,9 @@ paths:
                     description: >-
                       Raw `approve()` transactions that must be signed and
                       submitted alongside the action signature. Empty when
-                      the wallet has already approved a sufficient amount.
+                      no approvals are required.
                     items:
-                      $ref: '#/components/schemas/ApprovalRequirement'
+                      $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
   /transfers/{id}:
@@ -712,9 +712,9 @@ paths:
                     description: >-
                       Raw `approve()` transactions that must be signed and
                       submitted alongside the action signature. Empty when
-                      the wallet has already approved a sufficient amount.
+                      no approvals are required.
                     items:
-                      $ref: '#/components/schemas/ApprovalRequirement'
+                      $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
   /swaps/{id}:
@@ -859,9 +859,9 @@ paths:
                     description: >-
                       Raw `approve()` transactions that must be signed and
                       submitted alongside the action signature. Empty when
-                      the wallet has already approved a sufficient amount.
+                      no approvals are required.
                     items:
-                      $ref: '#/components/schemas/ApprovalRequirement'
+                      $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
   /bridges/{id}:
@@ -1000,9 +1000,9 @@ paths:
                     description: >-
                       Raw `approve()` transactions that must be signed and
                       submitted alongside the action signature. Empty when
-                      the wallet has already approved a sufficient amount.
+                      no approvals are required.
                     items:
-                      $ref: '#/components/schemas/ApprovalRequirement'
+                      $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
   /lendings/{id}:
@@ -1305,9 +1305,9 @@ paths:
                     description: >-
                       Raw `approve()` transactions that must be signed and
                       submitted alongside the action signature. Empty when
-                      the wallet has already approved a sufficient amount.
+                      no approvals are required.
                     items:
-                      $ref: '#/components/schemas/ApprovalRequirement'
+                      $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
   /stakings/{id}:
@@ -2497,12 +2497,12 @@ components:
               approvals:
                 type: array
                 description: >-
-                  Signed raw `approve()` transactions authorizing the
-                  token spend needed for this action, one per entry in the
-                  corresponding `/data` response's `requiredApprovals`.
+                  Signed and RLP-encoded `approve()` transactions authorizing the
+                  token spend needed for this action, matching `requiredApprovals`
+                  entry in `/data` response.
                   Omit or leave empty when `requiredApprovals` was empty.
                 items:
-                  $ref: '#/components/schemas/SignedApproval'
+                  $ref: '#/components/schemas/HexString'
   responses:
     SignatureSubmitted:
       description: Signature submitted
@@ -2563,7 +2563,7 @@ components:
       example: 550e8400-e29b-41d4-a716-446655440000
     BigInteger:
       type: string
-      description: A non-negative integer represented as a decimal string.
+      description: A non-negative integer represented as a string.
       example: '1000000000000000000'
     CID:
       type: string
@@ -2799,20 +2799,36 @@ components:
           description: EIP-712 signature over `typedData` by `signer`
         signer:
           $ref: '#/components/schemas/Address'
-    ApprovalTransaction:
+    TransactionRequest:
       type: object
-      description: >-
-        Unsigned raw transaction calling `approve(spender, amount)` on the
-        token contract, to authorize the token spend required by an action.
+      description: An unsigned raw transaction that must be signed before it can be submitted.
       required:
+        - chainId
+        - from
         - to
+        - nonce
         - data
         - value
+        - gasLimit
+        - maxFeePerGas
+        - maxPriorityFeePerGas
       properties:
+        chainId:
+          allOf:
+            - $ref: '#/components/schemas/ChainId'
+          description: Chain ID this transaction must be signed and submitted on
+        from:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Address this transaction is sent from
         to:
           allOf:
             - $ref: '#/components/schemas/Address'
-          description: Token contract address to call. Equal to `token`.
+          description: Token contract address to call
+        nonce:
+          type: integer
+          description: Account nonce to use for this transaction
+          example: 24
         data:
           allOf:
             - $ref: '#/components/schemas/HexString'
@@ -2822,54 +2838,21 @@ components:
             - $ref: '#/components/schemas/BigInteger'
           description: Native token value to send with the transaction, in wei. Always `"0"`.
           example: '0'
-    ApprovalRequirement:
-      type: object
-      description: >-
-        A raw `approve()` transaction that must be signed and submitted
-        alongside the action signature before the action can execute.
-      required:
-        - token
-        - spender
-        - amount
-        - transaction
-      properties:
-        token:
-          allOf:
-            - $ref: '#/components/schemas/Address'
-          description: Token that needs approval
-        spender:
-          allOf:
-            - $ref: '#/components/schemas/Address'
-          description: Address to be approved to spend the token
-        amount:
+        gasLimit:
           allOf:
             - $ref: '#/components/schemas/BigInteger'
-          description: Amount to approve
-        transaction:
+          description: Gas limit for this transaction
+          example: '60000'
+        maxFeePerGas:
           allOf:
-            - $ref: '#/components/schemas/ApprovalTransaction'
-          description: Raw `approve()` transaction to sign
-    SignedApproval:
-      type: object
-      description: >-
-        A signed raw `approve()` transaction submitted to satisfy one
-        entry of a `/data` response's `requiredApprovals`.
-      required:
-        - token
-        - signedTransaction
-      properties:
-        token:
+            - $ref: '#/components/schemas/BigInteger'
+          description: Maximum total fee per gas unit, in wei
+          example: '30000000000'
+        maxPriorityFeePerGas:
           allOf:
-            - $ref: '#/components/schemas/Address'
-          description: >-
-            Token this approval is for, matching the `token` of the
-            corresponding `requiredApprovals` entry
-        signedTransaction:
-          allOf:
-            - $ref: '#/components/schemas/HexString'
-          description: >-
-            The matching `requiredApprovals[].transaction`, signed and
-            RLP-encoded (as accepted by `eth_sendRawTransaction`)
+            - $ref: '#/components/schemas/BigInteger'
+          description: Maximum priority fee per gas unit, in wei
+          example: '1000000000'
     TriggerType:
       type: integer
       enum:
