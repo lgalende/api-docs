@@ -12,7 +12,9 @@ externalDocs:
   url: https://mimic.fi
 tags:
   - name: General
-    description: General information
+    description: Query the chains and settler addresses supported by the API
+  - name: Tokens
+    description: Query the tokens supported by the API and their prices
   - name: Wallets management
     description: >-
       Create and manage wallets. For Safe wallets, compute EIP-712 data to
@@ -47,8 +49,6 @@ tags:
       Automated strategies that manage a portfolio over time. Compute
       EIP-712 data to sign via `POST /{action}/data`, then submit the
       signature via `POST /{action}`
-  - name: Oracle queries
-    description: Read blockchain data
 paths:
   /chains:
     get:
@@ -105,6 +105,84 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Settler'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /tokens:
+    get:
+      tags:
+        - Tokens
+      description: >-
+        Returns the tokens supported by the API, optionally filtered by
+        chain.
+      parameters:
+        - name: chainIds
+          in: query
+          required: false
+          description: >-
+            Only return tokens on these chain IDs, as a comma-separated
+            list. Omit to return tokens on every supported chain.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ChainId'
+          example: '1,10'
+      responses:
+        '200':
+          description: List of supported tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - tokens
+                properties:
+                  tokens:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Token'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /tokens/{address}:
+    get:
+      tags:
+        - Tokens
+      description: >-
+        Returns information about a specific supported token, including
+        its current USD price.
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: Token contract address
+          schema:
+            $ref: '#/components/schemas/Address'
+        - name: chainId
+          in: query
+          required: true
+          description: >-
+            Chain ID the token is on
+          schema:
+            $ref: '#/components/schemas/ChainId'
+      responses:
+        '200':
+          description: The requested token, including its current USD price
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Token'
+                  - type: object
+                    required:
+                      - price
+                    properties:
+                      price:
+                        type: number
+                        description: Current token price in USD
+                        example: 1.0
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -2425,41 +2503,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-  /prices:
-    post:
-      tags:
-        - Oracle queries
-      description: Get the USD price of a token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - chainId
-                - token
-              properties:
-                chainId:
-                  $ref: '#/components/schemas/ChainId'
-                token:
-                  $ref: '#/components/schemas/Address'
-      responses:
-        '200':
-          description: Token price in USD
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - price
-                properties:
-                  price:
-                    type: string
-                    description: USD price per token, as a decimal string
-                    example: '3245.12'
-        '400':
-          $ref: '#/components/responses/BadRequest'
 components:
   requestBodies:
     SignatureSubmission:
@@ -2745,6 +2788,41 @@ components:
           $ref: '#/components/schemas/Address'
         chainId:
           $ref: '#/components/schemas/ChainId'
+    Token:
+      type: object
+      description: A token supported by the API
+      required:
+        - chainId
+        - address
+        - symbol
+        - name
+        - decimals
+      properties:
+        chainId:
+          allOf:
+            - $ref: '#/components/schemas/ChainId'
+          description: Chain ID the token is on
+        address:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Token contract address
+        symbol:
+          type: string
+          description: Token symbol
+          example: USDC
+        name:
+          type: string
+          description: Token name
+          example: USD Coin
+        decimals:
+          type: integer
+          description: Number of decimals the token uses
+          example: 6
+        logoURI:
+          type: string
+          format: uri
+          description: URL of the token logo
+          example: https://assets.mimic.fi/tokens/usdc.png
     TriggerDomain:
       type: object
       required:
