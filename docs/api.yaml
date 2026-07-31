@@ -340,11 +340,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -358,7 +355,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /wallets/safe/data
+          description: ID returned by POST /wallets/safe
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -496,12 +493,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -525,7 +519,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /transfers/data
+          description: ID returned by POST /transfers
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -636,11 +630,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -654,7 +645,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /calls/data
+          description: ID returned by POST /calls
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -775,12 +766,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -804,7 +792,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /swaps/data
+          description: ID returned by POST /swaps
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -922,12 +910,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -951,7 +936,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /bridges/data
+          description: ID returned by POST /bridges
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -1063,12 +1048,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -1092,7 +1074,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /lendings/data
+          description: ID returned by POST /lendings
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -1232,11 +1214,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -1252,7 +1231,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /lending-rebalancing/data
+          description: ID returned by POST /lending-rebalancing
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -1368,12 +1347,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                   - requiredApprovals
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     allOf:
                       - $ref: '#/components/schemas/TriggerSignaturePayload'
@@ -1397,7 +1373,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /stakings/data
+          description: ID returned by POST /stakings
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -1527,11 +1503,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -1546,7 +1519,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /deposit-splitting/data
+          description: ID returned by POST /deposit-splitting
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -1698,11 +1671,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -1716,7 +1686,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /dca/data
+          description: ID returned by POST /dca
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -1853,11 +1823,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -1871,7 +1838,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /stop-loss/data
+          description: ID returned by POST /stop-loss
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -1997,11 +1964,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -2015,7 +1979,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /take-profit/data
+          description: ID returned by POST /take-profit
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -2135,11 +2099,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -2153,7 +2114,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /limit-order/data
+          description: ID returned by POST /limit-order
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -2298,11 +2259,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -2318,7 +2276,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /portfolio-rebalancing/data
+          description: ID returned by POST /portfolio-rebalancing
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -2467,11 +2425,8 @@ paths:
               schema:
                 type: object
                 required:
-                  - id
                   - signaturePayload
                 properties:
-                  id:
-                    $ref: '#/components/schemas/UUID'
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
@@ -2487,7 +2442,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID returned by POST /stablecoin-consolidation/data
+          description: ID returned by POST /stablecoin-consolidation
           schema:
             $ref: '#/components/schemas/UUID'
       responses:
@@ -2512,13 +2467,8 @@ components:
           schema:
             type: object
             required:
-              - id
               - signature
             properties:
-              id:
-                allOf:
-                  - $ref: '#/components/schemas/UUID'
-                description: ID returned by the corresponding `/data` call
               signature:
                 $ref: '#/components/schemas/TriggerSignature'
     SignatureSubmissionWithApprovals:
@@ -2528,13 +2478,8 @@ components:
           schema:
             type: object
             required:
-              - id
               - signature
             properties:
-              id:
-                allOf:
-                  - $ref: '#/components/schemas/UUID'
-                description: ID returned by the corresponding `/data` call
               signature:
                 $ref: '#/components/schemas/TriggerSignature'
               approvals:
@@ -2553,10 +2498,15 @@ components:
         application/json:
           schema:
             type: object
+            required:
+              - id
             properties:
               id:
                 allOf:
                   - $ref: '#/components/schemas/UUID'
+                description: >-
+                  ID for this request, returned to track its status via
+                  `GET /{action}/{id}`
     BadRequest:
       description: Bad request — invalid parameters or body
       content:
@@ -2601,8 +2551,8 @@ components:
       type: string
       format: uuid
       description: >-
-        Identifier for an action request, returned by `POST /{action}/data`
-        and used to submit its signature and to track its status.
+        Identifier for a submitted action request, returned by
+        `POST /{action}` and used to track its status.
       example: 550e8400-e29b-41d4-a716-446655440000
     BigInteger:
       type: string
