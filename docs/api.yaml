@@ -2,7 +2,12 @@ openapi: 3.1.0
 info:
   title: Mimic API
   description: |-
-    This is a Mimic API specification.
+    Mimic API lets you execute on-chain wallet actions via signed
+    intents, including transfers, swaps, bridges, lending, staking, and
+    automated portfolio strategies such as DCA, stop-loss/take-profit,
+    and rebalancing. Most actions follow a two-step flow: compute EIP-712
+    data to sign via `POST /{action}/data`, then submit the signature via
+    `POST /{action}` to execute it.
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -74,7 +79,10 @@ paths:
     get:
       tags:
         - General
-      description: Get supported settler addresses
+      description: >-
+        Get Mimic's smart contract address for each supported chain. This
+        is the address a user's wallet must allow to move its funds when
+        executing an action.
       responses:
         '200':
           description: List of settler addresses for all supported chains
@@ -90,7 +98,10 @@ paths:
     get:
       tags:
         - General
-      description: Get the settler address for a supported chain
+      description: >-
+        Get Mimic's smart contract address for a supported chain. This is
+        the address a user's wallet must allow to move its funds when
+        executing an action.
       parameters:
         - name: chainId
           in: path
@@ -288,7 +299,10 @@ paths:
     post:
       tags:
         - Wallets management
-      description: Submit the signature to create the Safe wallet
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /wallets/safe/data` to create the Safe wallet. Track the
+        execution via `GET /wallets/safe/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -304,7 +318,9 @@ paths:
     post:
       tags:
         - Wallets management
-      description: Computes EIP-712 data to be signed to create a new Safe wallet
+      description: >-
+        Computes EIP-712 data to be signed to create a new Safe wallet.
+        Submit the resulting signature via `POST /wallets/safe`.
       requestBody:
         required: true
         content:
@@ -388,7 +404,7 @@ paths:
     post:
       tags:
         - Wallets management
-      description: Get the token balance of a wallet
+      description: Get the current balance of a specific token held by a wallet, on a specific chain.
       parameters:
         - name: wallet
           in: path
@@ -428,7 +444,12 @@ paths:
     post:
       tags:
         - Transfers
-      description: Submit the signature to execute the transfer
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /transfers/data`, along with any required approvals, to
+        transfer tokens from a wallet to a recipient. Track the execution
+        via
+        `GET /transfers/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -446,7 +467,9 @@ paths:
         - Transfers
       description: >-
         Computes EIP-712 data to be signed to transfer tokens from a wallet
-        to a recipient.
+        to a recipient. Submit the resulting signature, along with a
+        signature for each entry in `requiredApprovals` if any are
+        returned, via `POST /transfers`.
       requestBody:
         required: true
         content:
@@ -546,7 +569,10 @@ paths:
     post:
       tags:
         - Contract calls
-      description: Submit the signature to execute the call
+      description: >-
+        Submit the signature of the data obtained from `POST /calls/data`
+        to execute one or more arbitrary contract calls from a wallet,
+        atomically. Track the execution via `GET /calls/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -564,7 +590,8 @@ paths:
         - Contract calls
       description: >-
         Computes EIP-712 data to be signed to execute one or more arbitrary
-        contract calls from a wallet, atomically.
+        contract calls from a wallet, atomically. Submit the resulting
+        signature via `POST /calls`.
       requestBody:
         required: true
         content:
@@ -640,7 +667,7 @@ paths:
     get:
       tags:
         - Contract calls
-      description: Get the status of a call execution
+      description: Get the status of contract calls execution
       parameters:
         - name: id
           in: path
@@ -680,7 +707,11 @@ paths:
     post:
       tags:
         - Swap
-      description: Submit the signature to execute the swap
+      description: >-
+        Submit the signature of the data obtained from `POST /swaps/data`,
+        along with any required approvals, to execute the single-chain
+        swap. Track the
+        execution via `GET /swaps/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -698,7 +729,9 @@ paths:
         - Swap
       description: >-
         Computes EIP-712 data to be signed to create a single-chain swap
-        operation.
+        operation. Submit the resulting signature, along with a signature
+        for each entry in `requiredApprovals` if any are returned, via
+        `POST /swaps`.
       requestBody:
         required: true
         content:
@@ -824,7 +857,10 @@ paths:
     post:
       tags:
         - Bridge
-      description: Submit the signature to execute the bridge
+      description: >-
+        Submit the signature of the data obtained from `POST /bridges/data`,
+        along with any required approvals, to move a token from one chain
+        to another. Track the execution via `GET /bridges/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -842,7 +878,9 @@ paths:
         - Bridge
       description: >-
         Computes EIP-712 data to be signed to move a token from one chain to
-        another.
+        another. Submit the resulting signature, along with a signature
+        for each entry in `requiredApprovals` if any are returned, via
+        `POST /bridges`.
       requestBody:
         required: true
         content:
@@ -975,7 +1013,11 @@ paths:
     post:
       tags:
         - Earn
-      description: Submit the signature to execute the deposit into a lending pool
+      description: >-
+        Submit the signature of the data obtained from `POST /lendings/data`,
+        along with any required approvals, to deposit a token into a
+        lending protocol to generate yield. Track the execution via
+        `GET /lendings/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -993,7 +1035,10 @@ paths:
         - Earn
       description: >-
         Computes EIP-712 data to be signed to deposit a token into a
-        lending pool.
+        lending protocol to generate yield. Submit the resulting
+        signature, along with a signature for each entry in
+        `requiredApprovals` if
+        any are returned, via `POST /lendings`.
       requestBody:
         required: true
         content:
@@ -1101,7 +1146,13 @@ paths:
     post:
       tags:
         - Earn
-      description: Submit the signature to create the lending rebalancing strategy
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /lending-rebalancing/data` to create the lending
+        rebalancing strategy that moves a deposit to the highest-yielding
+        of the selected lending protocols, either once or as a recurring
+        strategy that keeps monitoring APY. Track the execution via
+        `GET /lending-rebalancing/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1119,8 +1170,9 @@ paths:
         - Earn
       description: >-
         Computes EIP-712 data to be signed to move a deposit to the
-        highest-yielding of the selected lending markets, either once or as
-        a recurring strategy that keeps monitoring APY.
+        highest-yielding of the selected lending protocols, either once or as
+        a recurring strategy that keeps monitoring APY. Submit the
+        resulting signature via `POST /lending-rebalancing`.
       requestBody:
         required: true
         content:
@@ -1273,7 +1325,11 @@ paths:
     post:
       tags:
         - Earn
-      description: Submit the signature to execute the deposit into a staking protocol
+      description: >-
+        Submit the signature of the data obtained from `POST /stakings/data`,
+        along with any required approvals, to deposit ETH into a staking
+        protocol to generate yield. Track the execution via
+        `GET /stakings/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -1291,7 +1347,10 @@ paths:
         - Earn
       description: >-
         Computes EIP-712 data to be signed to deposit ETH into a staking
-        protocol.
+        protocol to generate yield. Submit the resulting signature, along
+        with a signature for each entry in `requiredApprovals` if any are
+        returned, via
+        `POST /stakings`.
       requestBody:
         required: true
         content:
@@ -1400,7 +1459,13 @@ paths:
     post:
       tags:
         - Assets management
-      description: Submit the signature to create the deposit splitting strategy
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /deposit-splitting/data` to create the deposit splitting
+        strategy: a Safe wallet that accumulates incoming deposits of a
+        given token and periodically splits the balance across one or
+        more recipients. Track the execution via
+        `GET /deposit-splitting/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1420,7 +1485,8 @@ paths:
         Computes EIP-712 data to be signed to create a deposit splitting
         strategy: a Safe wallet that accumulates incoming deposits of a
         given token and periodically splits the balance across one or more
-        recipients.
+        recipients. Submit the resulting signature via
+        `POST /deposit-splitting`.
       requestBody:
         required: true
         content:
@@ -1569,7 +1635,10 @@ paths:
     post:
       tags:
         - Swap
-      description: Submit the signature to create the DCA strategy
+      description: >-
+        Submit the signature of the data obtained from `POST /dca/data`
+        to create the recurring DCA (dollar-cost averaging) strategy.
+        Track the execution via `GET /dca/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1587,7 +1656,8 @@ paths:
         - Swap
       description: >-
         Computes EIP-712 data to be signed to create a recurring DCA
-        (dollar-cost averaging) strategy.
+        (dollar-cost averaging) strategy. Submit the resulting signature
+        via `POST /dca`.
       requestBody:
         required: true
         content:
@@ -1731,7 +1801,12 @@ paths:
     post:
       tags:
         - Swap
-      description: Submit the signature to create the stop-loss strategy
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /stop-loss/data` to create the stop-loss strategy that
+        monitors a token's exchange rate and swaps it once it falls to or
+        below a threshold. Track the execution via
+        `GET /stop-loss/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1750,7 +1825,8 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to create a stop-loss strategy
         that monitors a token's exchange rate and swaps it once it falls
-        to or below a threshold.
+        to or below a threshold. Submit the resulting signature via
+        `POST /stop-loss`.
       requestBody:
         required: true
         content:
@@ -1872,7 +1948,12 @@ paths:
     post:
       tags:
         - Swap
-      description: Submit the signature to create the take-profit strategy
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /take-profit/data` to create the take-profit strategy that
+        monitors a token's exchange rate and swaps it once it rises to or
+        above a threshold. Track the execution via
+        `GET /take-profit/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1891,7 +1972,8 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to create a take-profit strategy
         that monitors a token's exchange rate and swaps it once it rises
-        to or above a threshold.
+        to or above a threshold. Submit the resulting signature via
+        `POST /take-profit`.
       requestBody:
         required: true
         content:
@@ -2013,7 +2095,12 @@ paths:
     post:
       tags:
         - Swap
-      description: Submit the signature to create the limit order
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /limit-order/data` to create the limit order that swaps a
+        fixed amount of tokenIn for tokenOut once the market rate reaches
+        the requested limitRate. Track the execution via
+        `GET /limit-order/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -2032,7 +2119,8 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to create a limit order that
         swaps a fixed amount of tokenIn for tokenOut once the market rate
-        reaches the requested limitRate.
+        reaches the requested limitRate. Submit the resulting signature
+        via `POST /limit-order`.
       requestBody:
         required: true
         content:
@@ -2148,7 +2236,12 @@ paths:
     post:
       tags:
         - Assets management
-      description: Submit the signature to create the portfolio rebalancing strategy
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /portfolio-rebalancing/data` to create the portfolio
+        rebalancing strategy that rebalances a portfolio to target token
+        allocations, either once or as a recurring strategy. Track the
+        execution via `GET /portfolio-rebalancing/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -2166,7 +2259,8 @@ paths:
         - Assets management
       description: >-
         Computes EIP-712 data to be signed to rebalance a portfolio to target
-        token allocations, either once or as a recurring strategy.
+        token allocations, either once or as a recurring strategy. Submit
+        the resulting signature via `POST /portfolio-rebalancing`.
       requestBody:
         required: true
         content:
@@ -2331,7 +2425,12 @@ paths:
     post:
       tags:
         - Assets management
-      description: Submit the signature to create the stablecoin consolidation strategy
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /stablecoin-consolidation/data` to create the stablecoin
+        consolidation strategy that swaps all tokens above a given USD
+        threshold into a stablecoin, each swap in a separate transaction.
+        Track the execution via `GET /stablecoin-consolidation/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -2350,6 +2449,8 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to swap all tokens above a given
         USD threshold into a stablecoin, each swap in a separate transaction.
+        Submit the resulting signature via
+        `POST /stablecoin-consolidation`.
       requestBody:
         required: true
         content:
@@ -2730,6 +2831,9 @@ components:
             Current balances and information relevant to this strategy
     Settler:
       type: object
+      description: >-
+        Mimic's smart contract authorized to move funds out of
+        a user's wallet to execute the corresponding actions.
       required:
         - address
         - chainId
@@ -3049,3 +3153,6 @@ components:
       type: apiKey
       in: header
       name: X-Api-Key
+      description: >-
+        API key for your Mimic account, required for custodial
+        wallet-management operations.
