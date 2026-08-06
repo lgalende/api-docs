@@ -764,6 +764,7 @@ paths:
                 - amount
                 - tokenOut
                 - wallet
+                - slippageBps
               properties:
                 chainId:
                   allOf:
@@ -789,18 +790,10 @@ paths:
                   type: integer
                   description: >-
                     Maximum slippage in tokenOut amount to accept, in basis
-                    points (e.g. 10000 = 100%). Exactly one of
-                    `slippageBps` or `minAmountOut` is required, not both.
+                    points (e.g. 10000 = 100%)
                   minimum: 0
                   maximum: 10000
                   example: 50
-                minAmountOut:
-                  type: string
-                  description: >-
-                    Minimum amount of tokenOut to accept, as a decimal
-                    string. Exactly one of `slippageBps` or `minAmountOut`
-                    is required, not both.
-                  example: '0.048'
                 recipient:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -913,6 +906,7 @@ paths:
                 - token
                 - amount
                 - wallet
+                - slippageBps
               properties:
                 sourceChainId:
                   allOf:
@@ -938,18 +932,10 @@ paths:
                   type: integer
                   description: >-
                     Maximum slippage in received amount to accept, in basis
-                    points (e.g. 10000 = 100%). Exactly one of
-                    `slippageBps` or `minAmountOut` is required, not both.
+                    points (e.g. 10000 = 100%)
                   minimum: 0
                   maximum: 10000
                   example: 50
-                minAmountOut:
-                  type: string
-                  description: >-
-                    Minimum amount of token to receive on destinationChainId,
-                    as a decimal string. Exactly one of `slippageBps` or
-                    `minAmountOut` is required, not both.
-                  example: '0.048'
                 recipient:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -1691,6 +1677,7 @@ paths:
                 - amount
                 - wallet
                 - frequency
+                - slippageBps
               properties:
                 chainId:
                   allOf:
@@ -1717,19 +1704,10 @@ paths:
                 slippageBps:
                   type: integer
                   description: >-
-                    Slippage tolerance, in basis points (e.g. 50 = 0.50%).
-                    Exactly one of `slippageBps` or `minAmountOut` is
-                    required, not both.
+                    Slippage tolerance, in basis points (e.g. 50 = 0.50%)
                   minimum: 0
                   maximum: 10000
                   example: 50
-                minAmountOut:
-                  type: string
-                  description: >-
-                    Minimum amount of tokenOut to accept per execution, as a
-                    decimal string. Exactly one of `slippageBps` or
-                    `minAmountOut` is required, not both.
-                  example: '10.3'
                 frequency:
                   type: string
                   description: How often the DCA swap executes
