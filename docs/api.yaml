@@ -6,7 +6,7 @@ info:
     intents, including transfers, swaps, bridges, lending, staking, and
     automated portfolio strategies such as DCA, stop-loss/take-profit,
     and rebalancing. Most actions follow a two-step flow: compute EIP-712
-    data to sign via `POST /{action}/data`, then submit the signature via
+    data to sign via `POST /{action}/prepare`, then submit the signature via
     `POST /{action}` to execute it.
   license:
     name: Apache 2.0
@@ -23,36 +23,36 @@ tags:
   - name: Wallets management
     description: >-
       Create and manage wallets. For Safe wallets, compute EIP-712 data to
-      sign via `POST /wallets/safe/data`, then submit the signature via
+      sign via `POST /wallets/safe/prepare`, then submit the signature via
       `POST /wallets/safe`. For custodial EOA wallets, create directly via
       `POST /wallets/eoa`
   - name: Transfers
     description: >-
       Send tokens to a recipient. Compute EIP-712 data to sign via
-      `POST /transfers/data`, then submit the signature via `POST /transfers`
+      `POST /transfers/prepare`, then submit the signature via `POST /transfers`
   - name: Contract calls
     description: >-
       Execute arbitrary contract calls from a wallet. Compute EIP-712 data
-      to sign via `POST /calls/data`, then submit the signature via
+      to sign via `POST /calls/prepare`, then submit the signature via
       `POST /calls`. EOAs are not supported (unless they use proper EIP-7702 delegation)
   - name: Swap
     description: >-
       Single-chain and recurring swap-based actions. Compute EIP-712 data
-      to sign via `POST /{action}/data`, then submit the signature via
+      to sign via `POST /{action}/prepare`, then submit the signature via
       `POST /{action}`
   - name: Bridge
     description: >-
       Cross-chain token transfers. Compute EIP-712 data to sign via
-      `POST /bridges/data`, then submit the signature via `POST /bridges`
+      `POST /bridges/prepare`, then submit the signature via `POST /bridges`
   - name: Earn
     description: >-
       Lending, staking and yield strategies. Compute EIP-712 data
-      to sign via `POST /{action}/data`, then submit the signature via
+      to sign via `POST /{action}/prepare`, then submit the signature via
       `POST /{action}`
   - name: Assets management
     description: >-
       Automated strategies that manage a portfolio over time. Compute
-      EIP-712 data to sign via `POST /{action}/data`, then submit the
+      EIP-712 data to sign via `POST /{action}/prepare`, then submit the
       signature via `POST /{action}`
 paths:
   /chains:
@@ -323,7 +323,7 @@ paths:
         - Wallets management
       description: >-
         Submit the signature of the data obtained from
-        `POST /wallets/safe/data` to create the Safe wallet. Track the
+        `POST /wallets/safe/prepare` to create the Safe wallet. Track the
         execution via `GET /wallets/safe/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -336,7 +336,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /wallets/safe/data:
+  /wallets/safe/prepare:
     post:
       tags:
         - Wallets management
@@ -469,7 +469,7 @@ paths:
         - Transfers
       description: >-
         Submit the signature of the data obtained from
-        `POST /transfers/data`, along with any required approvals, to
+        `POST /transfers/prepare`, along with any required approvals, to
         transfer tokens from a wallet to a recipient. Track the execution
         via
         `GET /transfers/{id}`.
@@ -484,7 +484,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /transfers/data:
+  /transfers/prepare:
     post:
       tags:
         - Transfers
@@ -593,7 +593,7 @@ paths:
       tags:
         - Contract calls
       description: >-
-        Submit the signature of the data obtained from `POST /calls/data`
+        Submit the signature of the data obtained from `POST /calls/prepare`
         to execute one or more arbitrary contract calls from a wallet,
         atomically. Track the execution via `GET /calls/{id}`.
       requestBody:
@@ -607,7 +607,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /calls/data:
+  /calls/prepare:
     post:
       tags:
         - Contract calls
@@ -731,7 +731,7 @@ paths:
       tags:
         - Swap
       description: >-
-        Submit the signature of the data obtained from `POST /swaps/data`,
+        Submit the signature of the data obtained from `POST /swaps/prepare`,
         along with any required approvals, to execute the single-chain
         swap. Track the
         execution via `GET /swaps/{id}`.
@@ -746,7 +746,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /swaps/data:
+  /swaps/prepare:
     post:
       tags:
         - Swap
@@ -874,7 +874,7 @@ paths:
       tags:
         - Bridge
       description: >-
-        Submit the signature of the data obtained from `POST /bridges/data`,
+        Submit the signature of the data obtained from `POST /bridges/prepare`,
         along with any required approvals, to move a token from one chain
         to another. Track the execution via `GET /bridges/{id}`.
       requestBody:
@@ -888,7 +888,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /bridges/data:
+  /bridges/prepare:
     post:
       tags:
         - Bridge
@@ -1023,7 +1023,7 @@ paths:
       tags:
         - Earn
       description: >-
-        Submit the signature of the data obtained from `POST /lendings/data`,
+        Submit the signature of the data obtained from `POST /lendings/prepare`,
         along with any required approvals, to deposit a token into a
         lending protocol to generate yield. Track the execution via
         `GET /lendings/{id}`.
@@ -1038,7 +1038,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /lendings/data:
+  /lendings/prepare:
     post:
       tags:
         - Earn
@@ -1157,7 +1157,7 @@ paths:
         - Earn
       description: >-
         Submit the signature of the data obtained from
-        `POST /lending-rebalancing/data` to create the lending
+        `POST /lending-rebalancing/prepare` to create the lending
         rebalancing strategy that moves a deposit to the highest-yielding
         of the selected lending protocols, either once or as a recurring
         strategy that keeps monitoring APY. Track the execution via
@@ -1173,7 +1173,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /lending-rebalancing/data:
+  /lending-rebalancing/prepare:
     post:
       tags:
         - Earn
@@ -1335,7 +1335,7 @@ paths:
       tags:
         - Earn
       description: >-
-        Submit the signature of the data obtained from `POST /stakings/data`,
+        Submit the signature of the data obtained from `POST /stakings/prepare`,
         along with any required approvals, to deposit ETH into a staking
         protocol to generate yield. Track the execution via
         `GET /stakings/{id}`.
@@ -1350,7 +1350,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stakings/data:
+  /stakings/prepare:
     post:
       tags:
         - Earn
@@ -1470,7 +1470,7 @@ paths:
         - Assets management
       description: >-
         Submit the signature of the data obtained from
-        `POST /deposit-splitting/data` to create the deposit splitting
+        `POST /deposit-splitting/prepare` to create the deposit splitting
         strategy: a Safe wallet that accumulates incoming deposits of a
         given token and periodically splits the balance across one or
         more recipients. Track the execution via
@@ -1486,7 +1486,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /deposit-splitting/data:
+  /deposit-splitting/prepare:
     post:
       tags:
         - Assets management
@@ -1645,7 +1645,7 @@ paths:
       tags:
         - Swap
       description: >-
-        Submit the signature of the data obtained from `POST /dca/data`
+        Submit the signature of the data obtained from `POST /dca/prepare`
         to create the recurring DCA (dollar-cost averaging) strategy.
         Track the execution via `GET /dca/{id}`.
       requestBody:
@@ -1659,7 +1659,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /dca/data:
+  /dca/prepare:
     post:
       tags:
         - Swap
@@ -1804,7 +1804,7 @@ paths:
         - Swap
       description: >-
         Submit the signature of the data obtained from
-        `POST /stop-loss/data` to create the stop-loss strategy that
+        `POST /stop-loss/prepare` to create the stop-loss strategy that
         monitors a token's exchange rate and swaps it once it falls to or
         below a threshold. Track the execution via
         `GET /stop-loss/{id}`.
@@ -1819,7 +1819,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stop-loss/data:
+  /stop-loss/prepare:
     post:
       tags:
         - Swap
@@ -1951,7 +1951,7 @@ paths:
         - Swap
       description: >-
         Submit the signature of the data obtained from
-        `POST /take-profit/data` to create the take-profit strategy that
+        `POST /take-profit/prepare` to create the take-profit strategy that
         monitors a token's exchange rate and swaps it once it rises to or
         above a threshold. Track the execution via
         `GET /take-profit/{id}`.
@@ -1966,7 +1966,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /take-profit/data:
+  /take-profit/prepare:
     post:
       tags:
         - Swap
@@ -2098,7 +2098,7 @@ paths:
         - Swap
       description: >-
         Submit the signature of the data obtained from
-        `POST /limit-order/data` to create the limit order that swaps a
+        `POST /limit-order/prepare` to create the limit order that swaps a
         fixed amount of tokenIn for tokenOut once the market rate reaches
         or exceeds the requested limitRate. Track the execution via
         `GET /limit-order/{id}`.
@@ -2113,7 +2113,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /limit-order/data:
+  /limit-order/prepare:
     post:
       tags:
         - Swap
@@ -2239,7 +2239,7 @@ paths:
         - Assets management
       description: >-
         Submit the signature of the data obtained from
-        `POST /portfolio-rebalancing/data` to create the portfolio
+        `POST /portfolio-rebalancing/prepare` to create the portfolio
         rebalancing strategy that rebalances a portfolio to target token
         allocations, either once or as a recurring strategy. Track the
         execution via `GET /portfolio-rebalancing/{id}`.
@@ -2254,7 +2254,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /portfolio-rebalancing/data:
+  /portfolio-rebalancing/prepare:
     post:
       tags:
         - Assets management
@@ -2428,7 +2428,7 @@ paths:
         - Assets management
       description: >-
         Submit the signature of the data obtained from
-        `POST /stablecoin-consolidation/data` to create the stablecoin
+        `POST /stablecoin-consolidation/prepare` to create the stablecoin
         consolidation strategy that swaps all tokens above a given USD
         threshold into a stablecoin, each swap in a separate transaction.
         Track the execution via `GET /stablecoin-consolidation/{id}`.
@@ -2443,7 +2443,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stablecoin-consolidation/data:
+  /stablecoin-consolidation/prepare:
     post:
       tags:
         - Assets management
@@ -2589,7 +2589,7 @@ components:
                 description: >-
                   Signed and RLP-encoded `approve()` transactions authorizing the
                   token spend needed for this action, matching `requiredApprovals`
-                  entry in `/data` response.
+                  entry in `/prepare` response.
                   Omit or leave empty when `requiredApprovals` was empty.
                 items:
                   $ref: '#/components/schemas/HexString'
