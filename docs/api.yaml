@@ -66,15 +66,24 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  properties: 
-                    chainId:
-                      type: integer
-                      example: 1
-                    name:
-                      type: string
-                      example: 'Ethereum'
+                type: object
+                required:
+                  - chains
+                properties:
+                  chains:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - chainId
+                        - name
+                      properties:
+                        chainId:
+                          $ref: '#/components/schemas/ChainId'
+                        name:
+                          type: string
+                          description: Human-readable chain name
+                          example: Ethereum
   /settlers:
     get:
       tags:
@@ -89,9 +98,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Settler'
+                type: object
+                required:
+                  - settlers
+                properties:
+                  settlers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Settler'
         '400':
           $ref: '#/components/responses/BadRequest'
   /settlers/{chainId}:
@@ -276,23 +290,28 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  required:
-                    - address
-                    - chainId
-                  properties:
-                    chainId:
-                      allOf:
-                        - $ref: '#/components/schemas/ChainId'
-                      description: Chain ID this wallet was created for
-                    address:
-                      allOf:
-                        - $ref: '#/components/schemas/Address'
-                      description: >-
-                        Address of the EOA wallet, in the format used by
-                        chainId
+                type: object
+                required:
+                  - wallets
+                properties:
+                  wallets:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - address
+                        - chainId
+                      properties:
+                        chainId:
+                          allOf:
+                            - $ref: '#/components/schemas/ChainId'
+                          description: Chain ID this wallet was created for
+                        address:
+                          allOf:
+                            - $ref: '#/components/schemas/Address'
+                          description: >-
+                            Address of the EOA wallet, in the format used by
+                            chainId
         '401':
           $ref: '#/components/responses/Unauthorized'
   /wallets/safe:
