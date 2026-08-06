@@ -505,6 +505,7 @@ paths:
                 - amount
                 - wallet
                 - recipient
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -526,11 +527,8 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/Address'
                   description: Address that receives the tokens
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the transfer
@@ -625,6 +623,7 @@ paths:
                 - chain
                 - wallet
                 - calls
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -667,11 +666,8 @@ paths:
                         description: >-
                           Native token value to send with this call, in
                           wei. Defaults to '0'.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to execute the calls
@@ -768,6 +764,7 @@ paths:
                 - tokenOut
                 - wallet
                 - slippageBps
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -802,11 +799,8 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the swap intent
@@ -910,6 +904,7 @@ paths:
                 - amount
                 - wallet
                 - slippageBps
+                - maxFeeUsd
               properties:
                 sourceChain:
                   allOf:
@@ -944,11 +939,8 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the token on destinationChain. Defaults to `wallet`.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the bridge intent
@@ -1060,6 +1052,7 @@ paths:
                 - protocol
                 - amount
                 - wallet
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -1089,11 +1082,8 @@ paths:
                   description: >-
                     Address from where the funds will be pulled and that
                     receives the deposit position
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the deposit
@@ -1194,6 +1184,7 @@ paths:
                 - protocols
                 - rotationThresholdBps
                 - wallet
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -1255,11 +1246,8 @@ paths:
                     Timestamp after which the strategy stops executing. Only
                     relevant when `schedule` is set. Use 0 for no end date.
                     Defaults to 0.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: >-
@@ -1319,7 +1307,7 @@ paths:
                                 type: string
                                 description: >-
                                   Current APY of the deposit's pool, in
-                                  percent as a decimal string
+                                  percent, as a decimal string
                                 example: '4.85'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1367,6 +1355,7 @@ paths:
                 - protocol
                 - amount
                 - wallet
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -1397,11 +1386,8 @@ paths:
                   description: >-
                     Address from where the funds will be pulled and that
                     receives the staking position
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the deposit
@@ -1671,6 +1657,7 @@ paths:
                 - wallet
                 - schedule
                 - slippageBps
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -1714,11 +1701,8 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the DCA strategy
@@ -1827,6 +1811,7 @@ paths:
                 - wallet
                 - balanceBps
                 - slippageBps
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -1872,11 +1857,8 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the stop-loss strategy
@@ -1974,6 +1956,7 @@ paths:
                 - wallet
                 - balanceBps
                 - slippageBps
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -2019,11 +2002,8 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the take-profit strategy
@@ -2120,6 +2100,7 @@ paths:
                 - amount
                 - limitRate
                 - wallet
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -2160,11 +2141,8 @@ paths:
                   description: >-
                     Timestamp after which the order is cancelled if it
                     hasn't filled. Use 0 for no expiration. Defaults to 0.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: EIP-712 data to be signed to create the limit order
@@ -2258,6 +2236,7 @@ paths:
                 - allocations
                 - wallet
                 - slippageBps
+                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -2319,11 +2298,8 @@ paths:
                     Timestamp after which the strategy stops executing. Only
                     relevant when `schedule` is set. Use 0 for no end date.
                     Defaults to 0.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: >-
@@ -2441,9 +2417,10 @@ paths:
               required:
                 - token
                 - chain
-                - usdMinAmount
+                - minAmountUsd
                 - wallet
                 - slippageBps
+                - maxFeeUsd
               properties:
                 token:
                   type: string
@@ -2456,10 +2433,10 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/Chain'
                   description: Chain to use to fetch tokens and consolidate to stablecoin
-                usdMinAmount:
+                minAmountUsd:
                   type: string
                   description: >-
-                    Threshold for token balances to fetch, in USD as a
+                    Threshold for token balances to fetch, in USD, as a
                     decimal string
                   example: '0.05'
                 wallet:
@@ -2487,11 +2464,8 @@ paths:
                     Timestamp after which the strategy stops executing. Only
                     relevant when `schedule` is set. Use 0 for no end date.
                     Defaults to 0.
-                feeAmount:
-                  type: string
-                  description: >-
-                    Max fee in USD. Defaults to 0.
-                  example: '1.5'
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
           description: >-
@@ -2655,6 +2629,12 @@ components:
         A standard 5-field cron expression, in order: minute, hour, day of
         month, month, day of week. Evaluated in UTC.
       example: '0 0 * * *'
+    MaxFeeUsd:
+      type: string
+      description: >-
+        Maximum fee to cover the cost of each on-chain transaction, in USD,
+        as a decimal string.
+      example: '0.5'
     Chain:
       type: string
       description: >-
@@ -2747,14 +2727,14 @@ components:
       description: Snapshot of token balances relevant to a strategy and their USD value
       required:
         - timestamp
-        - totalUsdValue
+        - totalValueUsd
         - balances
       properties:
         timestamp:
           allOf:
             - $ref: '#/components/schemas/Timestamp'
           description: Timestamp the snapshot was taken
-        totalUsdValue:
+        totalValueUsd:
           type: string
           description: Total USD value of balances, as a decimal string
           example: '123456.78'
@@ -2766,7 +2746,7 @@ components:
             required:
               - token
               - amount
-              - usdValue
+              - valueUsd
             properties:
               token:
                 allOf:
@@ -2776,7 +2756,7 @@ components:
                 type: string
                 description: Token balance, as a decimal string
                 example: '10.5'
-              usdValue:
+              valueUsd:
                 type: string
                 description: USD value of the balance, as a decimal string
                 example: '35245.67'
