@@ -419,7 +419,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
   /wallets/{wallet}/balances:
-    post:
+    get:
       tags:
         - Wallets management
       description: Get the current balance of a specific token held by a wallet, on a specific chain.
@@ -430,20 +430,20 @@ paths:
           description: Wallet address to query
           schema:
             $ref: '#/components/schemas/Address'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - chainId
-                - token
-              properties:
-                chainId:
-                  $ref: '#/components/schemas/ChainId'
-                token:
-                  $ref: '#/components/schemas/Address'
+        - name: chainId
+          in: query
+          required: true
+          description: Chain ID to read the balance on
+          schema:
+            $ref: '#/components/schemas/ChainId'
+        - name: token
+          in: query
+          required: true
+          description: >-
+            Token contract address. Use
+            `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
+          schema:
+            $ref: '#/components/schemas/Address'
       responses:
         '200':
           description: Token balance
@@ -455,7 +455,9 @@ paths:
                   - amount
                 properties:
                   amount:
-                    $ref: '#/components/schemas/BigInteger'
+                    type: string
+                    description: Token balance, as a decimal string
+                    example: '10.5'
         '400':
           $ref: '#/components/responses/BadRequest'
   /transfers:
