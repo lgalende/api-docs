@@ -75,11 +75,15 @@ paths:
                     items:
                       type: object
                       required:
-                        - chainId
+                        - id
                         - name
                       properties:
-                        chainId:
-                          $ref: '#/components/schemas/ChainId'
+                        id:
+                          allOf:
+                            - $ref: '#/components/schemas/Chain'
+                          description: >-
+                            Identifier used to reference this chain
+                            everywhere else in the API
                         name:
                           type: string
                           description: Human-readable chain name
@@ -108,7 +112,7 @@ paths:
                       $ref: '#/components/schemas/Settler'
         '400':
           $ref: '#/components/responses/BadRequest'
-  /settlers/{chainId}:
+  /settlers/{chain}:
     get:
       tags:
         - General
@@ -117,12 +121,12 @@ paths:
         the address a user's wallet must allow to move its funds when
         executing an action.
       parameters:
-        - name: chainId
+        - name: chain
           in: path
           required: true
-          description: Supported chain ID from /chains
+          description: Chain for which to get the settler address
           schema:
-            $ref: '#/components/schemas/ChainId'
+            $ref: '#/components/schemas/Chain'
       responses:
         '200':
           description: Settler address for the requested chain
@@ -142,19 +146,19 @@ paths:
         Returns the tokens supported by the API, optionally filtered by
         chain.
       parameters:
-        - name: chainIds
+        - name: chains
           in: query
           required: false
           description: >-
-            Only return tokens on these chain IDs, as a comma-separated
+            Only return tokens on these chains, as a comma-separated
             list. Omit to return tokens on every supported chain.
           style: form
           explode: false
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/ChainId'
-          example: '1,10'
+              $ref: '#/components/schemas/Chain'
+          example: 'ethereum,base'
       responses:
         '200':
           description: List of supported tokens
@@ -185,13 +189,13 @@ paths:
           description: Token contract address
           schema:
             $ref: '#/components/schemas/Address'
-        - name: chainId
+        - name: chain
           in: query
           required: true
           description: >-
-            Chain ID the token is on
+            Chain the token is on
           schema:
-            $ref: '#/components/schemas/ChainId'
+            $ref: '#/components/schemas/Chain'
       responses:
         '200':
           description: The requested token, including its current USD price
@@ -228,14 +232,13 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
+                    - $ref: '#/components/schemas/Chain'
                   description: >-
-                    Supported chain ID from /chains for which to create the
-                    wallet
+                    Chain for which to create the wallet
       responses:
         '200':
           description: The newly created EOA wallet
@@ -244,19 +247,19 @@ paths:
               schema:
                 type: object
                 required:
-                  - chainId
+                  - chain
                   - address
                 properties:
-                  chainId:
+                  chain:
                     allOf:
-                      - $ref: '#/components/schemas/ChainId'
-                    description: Chain ID this wallet was created for
+                      - $ref: '#/components/schemas/Chain'
+                    description: Chain this wallet was created for
                   address:
                     allOf:
                       - $ref: '#/components/schemas/Address'
                     description: >-
                       Address of the created EOA wallet, in the format
-                      used by the requested chainId
+                      used by the requested chain
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -266,16 +269,16 @@ paths:
         - Wallets management
       description: >-
         List the custodial EOA wallets created under the caller's account,
-        optionally filtered by chainId and/or address
+        optionally filtered by chain and/or address
       security:
         - ApiKeyAuth: []
       parameters:
-        - name: chainId
+        - name: chain
           in: query
           required: false
-          description: Only return wallets created for this chain ID
+          description: Only return wallets created for this chain
           schema:
-            $ref: '#/components/schemas/ChainId'
+            $ref: '#/components/schemas/Chain'
         - name: address
           in: query
           required: false
@@ -300,18 +303,18 @@ paths:
                       type: object
                       required:
                         - address
-                        - chainId
+                        - chain
                       properties:
-                        chainId:
+                        chain:
                           allOf:
-                            - $ref: '#/components/schemas/ChainId'
-                          description: Chain ID this wallet was created for
+                            - $ref: '#/components/schemas/Chain'
+                          description: Chain this wallet was created for
                         address:
                           allOf:
                             - $ref: '#/components/schemas/Address'
                           description: >-
                             Address of the EOA wallet, in the format used by
-                            chainId
+                            chain
         '401':
           $ref: '#/components/responses/Unauthorized'
   /wallets/safe:
@@ -347,13 +350,13 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - owner
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Supported chain ID from /chains
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain for which to create the wallet
                 owner:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -365,7 +368,7 @@ paths:
                     Use this option to create a wallet with the same address
                     as one previously deployed on another chain. If the
                     wallet already exists for the specified `owner` and
-                    `chainId`, wallet creation is skipped.
+                    `chain`, wallet creation is skipped.
       responses:
         '200':
           description: EIP-712 data to be signed to create a new Safe wallet
@@ -430,12 +433,12 @@ paths:
           description: Wallet address to query
           schema:
             $ref: '#/components/schemas/Address'
-        - name: chainId
+        - name: chain
           in: query
           required: true
-          description: Chain ID to read the balance on
+          description: Chain to read the balance on
           schema:
-            $ref: '#/components/schemas/ChainId'
+            $ref: '#/components/schemas/Chain'
         - name: token
           in: query
           required: true
@@ -497,16 +500,16 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - token
                 - amount
                 - wallet
                 - recipient
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the transfer will be executed
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the transfer will be executed
                 token:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -619,14 +622,14 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - wallet
                 - calls
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the calls will be executed
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the calls will be executed
                 wallet:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -759,17 +762,17 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - tokenIn
                 - amount
                 - tokenOut
                 - wallet
                 - slippageBps
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the swap will be executed
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the swap will be executed
                 tokenIn:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -901,21 +904,21 @@ paths:
             schema:
               type: object
               required:
-                - sourceChainId
-                - destinationChainId
+                - sourceChain
+                - destinationChain
                 - token
                 - amount
                 - wallet
                 - slippageBps
               properties:
-                sourceChainId:
+                sourceChain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID to bridge the token from
-                destinationChainId:
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain to bridge the token from
+                destinationChain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID to receive the token on
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain to receive the token on
                 token:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -940,7 +943,7 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/Address'
                   description: >-
-                    Address that receives the token on destinationChainId. Defaults to `wallet`.
+                    Address that receives the token on destinationChain. Defaults to `wallet`.
                 feeAmount:
                   type: string
                   description: >-
@@ -997,19 +1000,19 @@ paths:
                         allOf:
                           - $ref: '#/components/schemas/HexString'
                         description: >-
-                          Transaction hash on sourceChainId. Present only
+                          Transaction hash on sourceChain. Present only
                           when status is `succeeded`.
                       destinationTxHash:
                         allOf:
                           - $ref: '#/components/schemas/HexString'
                         description: >-
-                          Transaction hash on destinationChainId. Present
+                          Transaction hash on destinationChain. Present
                           only when status is `succeeded`.
                       amountOut:
                         type: string
                         description: >-
                           Actual amount of token received on
-                          destinationChainId. Present only when status is
+                          destinationChain. Present only when status is
                           `succeeded`.
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1052,16 +1055,16 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - token
                 - protocol
                 - amount
                 - wallet
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the deposit will be made
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the deposit will be made
                 token:
                   type: string
                   description: Underlying token to lend
@@ -1186,16 +1189,16 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - token
                 - protocols
                 - rotationThresholdBps
                 - wallet
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the rebalancing will take place
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the rebalancing will take place
                 token:
                   type: string
                   description: Underlying token to lend
@@ -1206,7 +1209,7 @@ paths:
                   type: array
                   description: >-
                     Lending protocols to consider when rotating. The
-                    highest-yielding pool for `token` on `chainId` is resolved
+                    highest-yielding pool for `token` on `chain` is resolved
                     for each selected protocol.
                   minItems: 1
                   items:
@@ -1364,16 +1367,16 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - token
                 - protocol
                 - amount
                 - wallet
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the deposit will be made
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the deposit will be made
                 token:
                   type: string
                   description: >-
@@ -1500,16 +1503,16 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - owner
                 - token
                 - allocations
                 - frequency
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the Safe wallet will be created
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the Safe wallet will be created
                 owner:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -1566,7 +1569,7 @@ paths:
                     Use this option to create a Safe wallet with the same
                     address as one previously deployed on another chain. If
                     the wallet already exists for the specified `owner` and
-                    `chainId`, wallet creation is skipped.
+                    `chain`, wallet creation is skipped.
       responses:
         '200':
           description: EIP-712 data to be signed to create the deposit splitting strategy
@@ -1671,7 +1674,7 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - tokenIn
                 - tokenOut
                 - amount
@@ -1679,10 +1682,10 @@ paths:
                 - frequency
                 - slippageBps
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the swap will be executed
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the swap will be executed
                 tokenIn:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -1832,7 +1835,7 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - tokenIn
                 - tokenOut
                 - stopLossRate
@@ -1840,10 +1843,10 @@ paths:
                 - balanceBps
                 - slippageBps
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the position exists
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the position exists
                 tokenIn:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -1979,7 +1982,7 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - tokenIn
                 - tokenOut
                 - takeProfitRate
@@ -1987,10 +1990,10 @@ paths:
                 - balanceBps
                 - slippageBps
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the position exists
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the position exists
                 tokenIn:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -2126,17 +2129,17 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - tokenIn
                 - tokenOut
                 - amount
                 - limitRate
                 - wallet
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the swap will be executed
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the swap will be executed
                 tokenIn:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -2266,15 +2269,15 @@ paths:
             schema:
               type: object
               required:
-                - chainId
+                - chain
                 - allocations
                 - wallet
                 - slippageBps
               properties:
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID where the portfolio exists
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the portfolio exists
                 allocations:
                   type: array
                   description: >-
@@ -2457,7 +2460,7 @@ paths:
               type: object
               required:
                 - token
-                - chainId
+                - chain
                 - usdMinAmount
                 - wallet
                 - slippageBps
@@ -2469,10 +2472,10 @@ paths:
                     - USDC
                     - USDT
                     - DAI
-                chainId:
+                chain:
                   allOf:
-                    - $ref: '#/components/schemas/ChainId'
-                  description: Chain ID to use to fetch tokens and consolidate to stablecoin
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain to use to fetch tokens and consolidate to stablecoin
                 usdMinAmount:
                   type: string
                   description: >-
@@ -2669,9 +2672,18 @@ components:
       type: integer
       description: Unix timestamp in milliseconds.
       example: 1700000000000
+    Chain:
+      type: string
+      description: >-
+        Identifier of a chain supported by the API.
+      pattern: '^[a-z0-9-]+$'
+      example: ethereum
     ChainId:
       type: integer
-      description: A supported chain ID.
+      description: >-
+        Numeric EVM chain ID. Used only inside raw transactions and on-chain
+        trigger payloads that must be signed with it; elsewhere the API
+        identifies chains by `Chain`.
       example: 1
     ExecutionStatus:
       type: object
@@ -2704,22 +2716,22 @@ components:
       type: object
       description: Single-chain or cross-chain swap that occurred during an execution
       required:
-        - sourceChainId
-        - destinationChainId
+        - sourceChain
+        - destinationChain
         - tokenIn
         - tokenOut
         - amountIn
         - amountOut
       properties:
-        sourceChainId:
+        sourceChain:
           allOf:
-            - $ref: '#/components/schemas/ChainId'
-          description: Chain ID tokenIn was swapped from
-        destinationChainId:
+            - $ref: '#/components/schemas/Chain'
+          description: Chain tokenIn was swapped from
+        destinationChain:
           allOf:
-            - $ref: '#/components/schemas/ChainId'
+            - $ref: '#/components/schemas/Chain'
           description: >-
-            Chain ID tokenOut was received on. Equal to sourceChainId for a
+            Chain tokenOut was received on. Equal to sourceChain for a
             same-chain swap.
         tokenIn:
           allOf:
@@ -2740,13 +2752,13 @@ components:
         txHash:
           allOf:
             - $ref: '#/components/schemas/HexString'
-          description: Transaction hash on sourceChainId
+          description: Transaction hash on sourceChain
         destinationTxHash:
           allOf:
             - $ref: '#/components/schemas/HexString'
           description: >-
-            Transaction hash on destinationChainId. Present only when
-            destinationChainId differs from sourceChainId.
+            Transaction hash on destinationChain. Present only when
+            destinationChain differs from sourceChain.
     PortfolioSnapshot:
       type: object
       description: Snapshot of token balances relevant to a strategy and their USD value
@@ -2834,26 +2846,26 @@ components:
         a user's wallet to execute the corresponding actions.
       required:
         - address
-        - chainId
+        - chain
       properties:
         address:
           $ref: '#/components/schemas/Address'
-        chainId:
-          $ref: '#/components/schemas/ChainId'
+        chain:
+          $ref: '#/components/schemas/Chain'
     Token:
       type: object
       description: A token supported by the API
       required:
-        - chainId
+        - chain
         - address
         - symbol
         - name
         - decimals
       properties:
-        chainId:
+        chain:
           allOf:
-            - $ref: '#/components/schemas/ChainId'
-          description: Chain ID the token is on
+            - $ref: '#/components/schemas/Chain'
+          description: Chain the token is on
         address:
           allOf:
             - $ref: '#/components/schemas/Address'
@@ -2933,7 +2945,7 @@ components:
       type: object
       description: An unsigned raw transaction that must be signed before it can be submitted.
       required:
-        - chainId
+        - chain
         - from
         - to
         - nonce
@@ -3078,7 +3090,7 @@ components:
       type: object
       required:
         - type
-        - chainId
+        - chain
         - contract
         - topics
         - delta
