@@ -332,22 +332,21 @@ paths:
                 - owner
               properties:
                 chainId:
-                  type: integer
+                  allOf:
+                    - $ref: '#/components/schemas/ChainId'
                   description: Supported chain ID from /chains
-                  minimum: 1
-                  example: 1
                 owner:
-                  type: string
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
                   description: Address that will own the Safe wallet
-                  example: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
                 expectedAddress:
-                  type: string
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
                   description: >-
-                    Use this option to create a wallet with the same
-                    address as one previously deployed on another chain. If
-                    the wallet already exists for the specified `owner` and
-                    `chainId`, it skips wallet creation.
-                  example: '0x1234567890abcdef1234567890abcdef12345678'
+                    Use this option to create a wallet with the same address
+                    as one previously deployed on another chain. If the
+                    wallet already exists for the specified `owner` and
+                    `chainId`, wallet creation is skipped.
       responses:
         '200':
           description: EIP-712 data to be signed to create a new Safe wallet
@@ -1554,13 +1553,13 @@ paths:
                     - $ref: '#/components/schemas/Timestamp'
                   description: Timestamp after which the strategy stops executing. Use 0 for no end date. Defaults to 0.
                 expectedAddress:
-                  type: string
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
                   description: >-
-                    Use this option to create a Safe wallet with the
-                    same address as one previously deployed on another
-                    chain. If the wallet already exists for the
-                    specified owner and chainId, it skips wallet creation
-                  example: '0x1234567890abcdef1234567890abcdef12345678'
+                    Use this option to create a Safe wallet with the same
+                    address as one previously deployed on another chain. If
+                    the wallet already exists for the specified `owner` and
+                    `chainId`, wallet creation is skipped.
       responses:
         '200':
           description: EIP-712 data to be signed to create the deposit splitting strategy
@@ -2099,7 +2098,7 @@ paths:
         Submit the signature of the data obtained from
         `POST /limit-order/data` to create the limit order that swaps a
         fixed amount of tokenIn for tokenOut once the market rate reaches
-        the requested limitRate. Track the execution via
+        or exceeds the requested limitRate. Track the execution via
         `GET /limit-order/{id}`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
@@ -2119,8 +2118,8 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to create a limit order that
         swaps a fixed amount of tokenIn for tokenOut once the market rate
-        reaches the requested limitRate. Submit the resulting signature
-        via `POST /limit-order`.
+        reaches or exceeds the requested limitRate. Submit the resulting
+        signature via `POST /limit-order`.
       requestBody:
         required: true
         content:
@@ -2155,7 +2154,7 @@ paths:
                   type: string
                   description: >-
                     Amount of tokenOut received per unit of tokenIn, at or
-                    below which to trigger the swap.
+                    above which to trigger the swap.
                   example: '3000.0'
                 wallet:
                   allOf:
