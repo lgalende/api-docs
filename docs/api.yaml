@@ -1242,23 +1242,18 @@ paths:
                   minimum: 0
                   maximum: 10000
                   example: 10000
-                frequency:
-                  type: string
+                schedule:
+                  allOf:
+                    - $ref: '#/components/schemas/CronExpression'
                   description: >-
                     How often APY is checked and the position is rebalanced
                     (if needed). Omit to rebalance once, immediately.
-                  enum:
-                    - hourly
-                    - daily
-                    - weekly
-                    - monthly
-                  example: daily
                 endDate:
                   allOf:
                     - $ref: '#/components/schemas/Timestamp'
                   description: >-
                     Timestamp after which the strategy stops executing. Only
-                    relevant when `frequency` is set. Use 0 for no end date.
+                    relevant when `schedule` is set. Use 0 for no end date.
                     Defaults to 0.
                 feeAmount:
                   type: string
@@ -1507,7 +1502,7 @@ paths:
                 - owner
                 - token
                 - allocations
-                - frequency
+                - schedule
               properties:
                 chain:
                   allOf:
@@ -1549,15 +1544,10 @@ paths:
                         minimum: 0
                         maximum: 10000
                         example: 5000
-                frequency:
-                  type: string
+                schedule:
+                  allOf:
+                    - $ref: '#/components/schemas/CronExpression'
                   description: How often the accumulated balance is split across recipients
-                  enum:
-                    - hourly
-                    - daily
-                    - weekly
-                    - monthly
-                  example: daily
                 endDate:
                   allOf:
                     - $ref: '#/components/schemas/Timestamp'
@@ -1679,7 +1669,7 @@ paths:
                 - tokenOut
                 - amount
                 - wallet
-                - frequency
+                - schedule
                 - slippageBps
               properties:
                 chain:
@@ -1711,15 +1701,10 @@ paths:
                   minimum: 0
                   maximum: 10000
                   example: 50
-                frequency:
-                  type: string
+                schedule:
+                  allOf:
+                    - $ref: '#/components/schemas/CronExpression'
                   description: How often the DCA swap executes
-                  enum:
-                    - hourly
-                    - daily
-                    - weekly
-                    - monthly
-                  example: daily
                 endDate:
                   allOf:
                     - $ref: '#/components/schemas/Timestamp'
@@ -2321,23 +2306,18 @@ paths:
                   minimum: 0
                   maximum: 10000
                   example: 100
-                frequency:
-                  type: string
+                schedule:
+                  allOf:
+                    - $ref: '#/components/schemas/CronExpression'
                   description: >-
                     How often the portfolio is checked and rebalanced (if
                     needed). Omit to rebalance once, immediately.
-                  enum:
-                    - hourly
-                    - daily
-                    - weekly
-                    - monthly
-                  example: weekly
                 endDate:
                   allOf:
                     - $ref: '#/components/schemas/Timestamp'
                   description: >-
                     Timestamp after which the strategy stops executing. Only
-                    relevant when `frequency` is set. Use 0 for no end date.
+                    relevant when `schedule` is set. Use 0 for no end date.
                     Defaults to 0.
                 feeAmount:
                   type: string
@@ -2494,23 +2474,18 @@ paths:
                   minimum: 0
                   maximum: 10000
                   example: 50
-                frequency:
-                  type: string
+                schedule:
+                  allOf:
+                    - $ref: '#/components/schemas/CronExpression'
                   description: >-
                     How often to sweep balances into the stablecoin. Omit to
                     run once, immediately.
-                  enum:
-                    - hourly
-                    - daily
-                    - weekly
-                    - monthly
-                  example: daily
                 endDate:
                   allOf:
                     - $ref: '#/components/schemas/Timestamp'
                   description: >-
                     Timestamp after which the strategy stops executing. Only
-                    relevant when `frequency` is set. Use 0 for no end date.
+                    relevant when `schedule` is set. Use 0 for no end date.
                     Defaults to 0.
                 feeAmount:
                   type: string
@@ -2670,8 +2645,16 @@ components:
       example: 1.0.0
     Timestamp:
       type: integer
+      title: Unix timestamp (ms)
       description: Unix timestamp in milliseconds.
       example: 1700000000000
+    CronExpression:
+      type: string
+      title: Cron expression (UTC)
+      description: >-
+        A standard 5-field cron expression, in order: minute, hour, day of
+        month, month, day of week. Evaluated in UTC.
+      example: '0 0 * * *'
     Chain:
       type: string
       description: >-
@@ -3077,9 +3060,7 @@ components:
           enum:
             - 0
         schedule:
-          type: string
-          description: A valid cron expression
-          example: '0 * * * *'
+          $ref: '#/components/schemas/CronExpression'
         delta:
           type: string
           description: A time delta string
