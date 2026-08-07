@@ -239,6 +239,8 @@ paths:
                     - $ref: '#/components/schemas/Chain'
                   description: >-
                     Chain for which to create the wallet
+                externalId:
+                  $ref: '#/components/schemas/ExternalId'
       responses:
         '200':
           description: The newly created EOA wallet
@@ -260,6 +262,8 @@ paths:
                     description: >-
                       Address of the created EOA wallet, in the format
                       used by the requested chain
+                  externalId:
+                    $ref: '#/components/schemas/ExternalId'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -269,7 +273,7 @@ paths:
         - Wallets management
       description: >-
         List the custodial EOA wallets created under the caller's account,
-        optionally filtered by chain and/or address
+        optionally filtered by chain, address and/or externalId
       security:
         - ApiKeyAuth: []
       parameters:
@@ -287,6 +291,13 @@ paths:
             the caller's account
           schema:
             $ref: '#/components/schemas/Address'
+        - name: externalId
+          in: query
+          required: false
+          description: >-
+            Only return wallets matching this external identifier
+          schema:
+            $ref: '#/components/schemas/ExternalId'
       responses:
         '200':
           description: List of EOA wallets
@@ -315,6 +326,8 @@ paths:
                           description: >-
                             Address of the EOA wallet, in the format used by
                             chain
+                        externalId:
+                          $ref: '#/components/schemas/ExternalId'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /wallets/safe:
@@ -365,10 +378,19 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/Address'
                   description: >-
-                    Use this option to create a wallet with the same address
+                    Use this field to create a wallet with the same address
                     as one previously deployed on another chain. If the
                     wallet already exists for the specified `owner` and
                     `chain`, wallet creation is skipped.
+                externalId:
+                  allOf:
+                    - $ref: '#/components/schemas/ExternalId'
+                  description: >-
+                    Use this field to reference a wallet by an ID from your
+                    own system, such as your user's ID. Not required to be
+                    unique. When used alongside `expectedAddress`, the
+                    request is rejected if the existing wallet already has a
+                    different `externalId`.
       responses:
         '200':
           description: EIP-712 data to be signed to create a new Safe wallet
@@ -417,6 +439,8 @@ paths:
                         description: >-
                           Address of the created wallet. Present only when
                           status is `succeeded`.
+                      externalId:
+                        $ref: '#/components/schemas/ExternalId'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1530,10 +1554,19 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/Address'
                   description: >-
-                    Use this option to create a Safe wallet with the same
+                    Use this field to create a Safe wallet with the same
                     address as one previously deployed on another chain. If
                     the wallet already exists for the specified `owner` and
                     `chain`, wallet creation is skipped.
+                externalId:
+                  allOf:
+                    - $ref: '#/components/schemas/ExternalId'
+                  description: >-
+                    Use this field to reference the created Safe wallet by an
+                    ID from your own system, such as your user's ID. Not
+                    required to be unique. When used alongside
+                    `expectedAddress`, the request is rejected if the
+                    existing wallet already has a different `externalId`.
       responses:
         '200':
           description: EIP-712 data to be signed to create the deposit splitting strategy
@@ -1575,6 +1608,8 @@ paths:
                         allOf:
                           - $ref: '#/components/schemas/Address'
                         description: Address of the created Safe wallet
+                      externalId:
+                        $ref: '#/components/schemas/ExternalId'
                       executions:
                         type: array
                         description: Most recent executions, ordered by timestamp descending
@@ -2572,6 +2607,13 @@ components:
         Identifier for a submitted action request, returned by
         `POST /{action}` and used to track its status.
       example: 550e8400-e29b-41d4-a716-446655440000
+    ExternalId:
+      type: string
+      description: >-
+        Client-supplied identifier for a wallet. Use it to reference a wallet by 
+        an ID from your own system, such as your user's ID
+      maxLength: 128
+      example: user_12345
     BigInteger:
       type: string
       description: A non-negative integer represented as a string.
