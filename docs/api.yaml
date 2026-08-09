@@ -225,6 +225,8 @@ paths:
         keypair managed by Mimic
       security:
         - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -268,6 +270,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
     get:
       tags:
         - Wallets management
@@ -338,6 +342,8 @@ paths:
         Submit the signature of the data obtained from
         `POST /wallets/safe/prepare` to create the Safe wallet. Track the
         execution via `GET /wallets/safe/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -349,6 +355,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /wallets/safe/prepare:
     post:
       tags:
@@ -497,6 +505,8 @@ paths:
         transfer tokens from a wallet to a recipient. Track the execution
         via
         `GET /transfers/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -508,6 +518,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /transfers/prepare:
     post:
       tags:
@@ -618,6 +630,8 @@ paths:
         Submit the signature of the data obtained from `POST /calls/prepare`
         to execute one or more arbitrary contract calls from a wallet,
         atomically. Track the execution via `GET /calls/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -629,6 +643,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /calls/prepare:
     post:
       tags:
@@ -755,6 +771,8 @@ paths:
         along with any required approvals, to execute the single-chain
         swap. Track the
         execution via `GET /swaps/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -766,6 +784,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /swaps/prepare:
     post:
       tags:
@@ -889,6 +909,8 @@ paths:
         Submit the signature of the data obtained from `POST /bridges/prepare`,
         along with any required approvals, to move a token from one chain
         to another. Track the execution via `GET /bridges/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -900,6 +922,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /bridges/prepare:
     post:
       tags:
@@ -1031,6 +1055,8 @@ paths:
         along with any required approvals, to deposit a token into a
         lending protocol to generate yield. Track the execution via
         `GET /lendings/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -1042,6 +1068,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /lendings/prepare:
     post:
       tags:
@@ -1164,6 +1192,8 @@ paths:
         of the selected lending protocols, either once or as a recurring
         strategy that keeps monitoring APY. Track the execution via
         `GET /lending-rebalancing/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1175,6 +1205,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /lending-rebalancing/prepare:
     post:
       tags:
@@ -1334,6 +1366,8 @@ paths:
         along with any required approvals, to deposit ETH into a staking
         protocol to generate yield. Track the execution via
         `GET /stakings/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
@@ -1345,6 +1379,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /stakings/prepare:
     post:
       tags:
@@ -1468,6 +1504,8 @@ paths:
         given token and periodically splits the balance across one or
         more recipients. Track the execution via
         `GET /deposit-splitting/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1479,6 +1517,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /deposit-splitting/prepare:
     post:
       tags:
@@ -1647,6 +1687,8 @@ paths:
         Submit the signature of the data obtained from `POST /dca/prepare`
         to create the recurring DCA (dollar-cost averaging) strategy.
         Track the execution via `GET /dca/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1658,6 +1700,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /dca/prepare:
     post:
       tags:
@@ -1795,6 +1839,8 @@ paths:
         monitors a token's exchange rate and swaps it once it falls to or
         below a threshold. Track the execution via
         `GET /stop-loss/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1806,6 +1852,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /stop-loss/prepare:
     post:
       tags:
@@ -1936,6 +1984,8 @@ paths:
         monitors a token's exchange rate and swaps it once it rises to or
         above a threshold. Track the execution via
         `GET /take-profit/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -1947,6 +1997,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /take-profit/prepare:
     post:
       tags:
@@ -2077,6 +2129,8 @@ paths:
         fixed amount of tokenIn for tokenOut once the market rate reaches
         or exceeds the requested limitRate. Track the execution via
         `GET /limit-order/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -2088,6 +2142,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /limit-order/prepare:
     post:
       tags:
@@ -2216,6 +2272,8 @@ paths:
         rebalancing strategy that rebalances a portfolio to target token
         allocations, either once or as a recurring strategy. Track the
         execution via `GET /portfolio-rebalancing/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -2227,6 +2285,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /portfolio-rebalancing/prepare:
     post:
       tags:
@@ -2394,6 +2454,8 @@ paths:
         consolidation strategy that swaps all tokens above a given USD
         threshold into a stablecoin, each swap in a separate transaction.
         Track the execution via `GET /stablecoin-consolidation/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
@@ -2405,6 +2467,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /stablecoin-consolidation/prepare:
     post:
       tags:
@@ -2512,6 +2576,22 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: >-
+        Client-generated key that makes this request safe to retry. Retrying
+        with the same key returns the original response instead of executing
+        the action twice. Use a value with enough entropy to be unique per
+        request, such as a UUID v4. Keys are scoped to the caller's account
+        and retained for 24 hours, after which the same key may be reused.
+        Reusing a key with a different request body is rejected.
+      schema:
+        type: string
+        maxLength: 255
+        example: 8f3a1c4e-2b7d-4a91-9c3e-15d8b0a7f6e2
   requestBodies:
     SignatureSubmission:
       required: true
@@ -2580,6 +2660,14 @@ components:
             $ref: '#/components/schemas/Error'
     NotFound:
       description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: >-
+        Conflict — the `Idempotency-Key` was reused with a different request
+        body, or a request with the same key is still in flight
       content:
         application/json:
           schema:
