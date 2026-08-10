@@ -419,12 +419,8 @@ paths:
         - Wallets management
       description: Get the status of a Safe wallet creation execution
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /wallets/safe
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /wallets/safe`
       responses:
         '200':
           description: Status of the wallet creation execution
@@ -596,12 +592,8 @@ paths:
         - Transfers
       description: Get the status of a transfer execution
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /transfers
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /transfers`
       responses:
         '200':
           description: Status of the transfer execution
@@ -728,12 +720,8 @@ paths:
         - Contract calls
       description: Get the status of contract calls execution
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /calls
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /calls`
       responses:
         '200':
           description: Status of the call execution
@@ -870,12 +858,8 @@ paths:
         - Swap
       description: Get the status of a swap execution
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /swaps
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /swaps`
       responses:
         '200':
           description: Status of the swap execution
@@ -1008,12 +992,8 @@ paths:
         - Bridge
       description: Get the status of a bridge execution
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /bridges
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /bridges`
       responses:
         '200':
           description: Status of the bridge execution
@@ -1155,12 +1135,8 @@ paths:
         - Earn
       description: Get the status of a lending deposit execution
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /lendings
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /lendings`
       responses:
         '200':
           description: Status of the lending deposit execution
@@ -1316,12 +1292,8 @@ paths:
         Get the status of the lending rebalancing strategy and its
         executions
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /lending-rebalancing
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /lending-rebalancing`
       responses:
         '200':
           description: >-
@@ -1511,12 +1483,8 @@ paths:
         - Earn
       description: Get the status of a staking deposit execution
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /stakings
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stakings`
       responses:
         '200':
           description: Status of the staking deposit execution
@@ -1672,12 +1640,8 @@ paths:
       description: >-
         Get the status of the deposit splitting strategy and its executions
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /deposit-splitting
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /deposit-splitting`
       responses:
         '200':
           description: Status of the deposit splitting strategy and its executions
@@ -1873,12 +1837,8 @@ paths:
         - Swap
       description: Get the status of the DCA strategy and its executions
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /dca
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /dca`
       responses:
         '200':
           description: Status of the DCA strategy and its executions
@@ -2071,12 +2031,8 @@ paths:
         - Swap
       description: Get the status of the stop-loss strategy and its executions
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /stop-loss
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stop-loss`
       responses:
         '200':
           description: Status of the stop-loss strategy and its executions
@@ -2258,12 +2214,8 @@ paths:
         - Swap
       description: Get the status of the take-profit strategy and its executions
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /take-profit
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /take-profit`
       responses:
         '200':
           description: Status of the take-profit strategy and its executions
@@ -2443,12 +2395,8 @@ paths:
         - Swap
       description: Get the status of the limit order and its executions
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /limit-order
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /limit-order`
       responses:
         '200':
           description: Status of the limit order and its executions
@@ -2646,12 +2594,8 @@ paths:
         Get the status of the portfolio rebalancing strategy and its
         executions
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /portfolio-rebalancing
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /portfolio-rebalancing`
       responses:
         '200':
           description: >-
@@ -2856,12 +2800,8 @@ paths:
         Get the status of the stablecoin consolidation strategy and its
         executions
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID returned by POST /stablecoin-consolidation
-          schema:
-            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stablecoin-consolidation`
       responses:
         '200':
           description: >-
