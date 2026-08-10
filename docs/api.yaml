@@ -1026,12 +1026,12 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-  /lendings:
+  /lendings/deposit:
     post:
       tags:
         - Earn
       description: >-
-        Submit the signature of the data obtained from `POST /lendings/prepare`,
+        Submit the signature of the data obtained from `POST /lendings/deposit/prepare`,
         along with any required approvals, to deposit a token into a
         lending protocol to generate yield. Track the execution via
         `GET /lendings/{id}`.
@@ -1050,7 +1050,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /lendings/prepare:
+  /lendings/deposit/prepare:
     post:
       tags:
         - Earn
@@ -1059,7 +1059,7 @@ paths:
         lending protocol to generate yield. Submit the resulting
         signature, along with a signature for each entry in
         `requiredApprovals` if
-        any are returned, via `POST /lendings`.
+        any are returned, via `POST /lendings/deposit`.
       requestBody:
         required: true
         content:
@@ -1129,17 +1129,143 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /lendings/withdraw:
+    post:
+      tags:
+        - Earn
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /lendings/withdraw/prepare`, along with any required approvals, to
+        withdraw a token from a lending protocol. Track the execution via `GET /lendings/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /lendings/withdraw/prepare:
+    post:
+      tags:
+        - Earn
+      description: >-
+        Computes EIP-712 data to be signed to withdraw a token from a lending protocol. Submit the resulting
+        signature, along with a signature for each entry in
+        `requiredApprovals` if any are returned, via `POST /lendings/withdraw`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chain
+                - token
+                - protocol
+                - wallet
+                - maxFeeUsd
+              oneOf:
+                - title: By token amount
+                  required:
+                    - amount
+                - title: By fraction of the position
+                  required:
+                    - balanceBps
+              properties:
+                chain:
+                  allOf:
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the position exists
+                token:
+                  type: string
+                  description: Underlying token to withdraw
+                  enum:
+                    - USDC
+                    - USDT
+                protocol:
+                  type: string
+                  description: Lending protocol to withdraw from
+                  enum:
+                    - aave
+                    - compound
+                    - morpho
+                    - spark
+                amount:
+                  type: string
+                  description: >-
+                    Amount of token to withdraw, as a decimal string. Exactly
+                    one of `amount` or `balanceBps` is required. To withdraw
+                    the whole balance, prefer `balanceBps` to avoid leaving
+                    dust behind.
+                  example: '10.5'
+                balanceBps:
+                  type: integer
+                  description: >-
+                    Fraction of the position to withdraw, in basis points
+                    (e.g. 10000 = 100% (full exit), 5000 = 50%). Exactly one
+                    of `amount` or `balanceBps` is required.
+                  minimum: 0
+                  maximum: 10000
+                  example: 10000
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address holding the position
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the withdrawn token. Defaults to
+                    `wallet`.
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to withdraw a token from a lending protocol
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - signaturePayload
+                  - requiredApprovals
+                properties:
+                  signaturePayload:
+                    allOf:
+                      - $ref: '#/components/schemas/TriggerSignaturePayload'
+                    description: EIP-712 data to be signed to withdraw a token from a lending protocol
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions that must be signed and
+                      submitted alongside the action signature. Empty when
+                      no approvals are required.
+                    items:
+                      $ref: '#/components/schemas/TransactionRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /lendings/{id}:
     get:
       tags:
         - Earn
-      description: Get the status of a lending deposit execution
+      description: >-
+        Get the status of a lending deposit or withdrawal execution
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /lendings`
+          description: >-
+            ID returned by `POST /lendings/deposit` or
+            `POST /lendings/withdraw`
       responses:
         '200':
-          description: Status of the lending deposit execution
+          description: Status of the lending deposit or withdrawal execution
           content:
             application/json:
               schema:
@@ -1373,12 +1499,125 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stakings:
+  /lending-rebalancing/{id}/withdraw:
     post:
       tags:
         - Earn
       description: >-
-        Submit the signature of the data obtained from `POST /stakings/prepare`,
+        Submit the signature of the data obtained from
+        `POST /lending-rebalancing/{id}/withdraw/prepare`, along with any
+        required approvals, to withdraw from the position managed by the
+        lending rebalancing strategy. Withdrawing does not stop the
+        strategy. Call `POST /lending-rebalancing/{id}/stop` to stop it.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /lending-rebalancing`
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /lending-rebalancing/{id}/withdraw/prepare:
+    post:
+      tags:
+        - Earn
+      description: >-
+        Computes EIP-712 data to be signed to withdraw from the position
+        managed by the lending rebalancing strategy. The chain, token,
+        protocol and wallet are taken from the strategy. Submit the
+        resulting signature, along with a signature for each entry in
+        `requiredApprovals` if any are returned, via
+        `POST /lending-rebalancing/{id}/withdraw`.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /lending-rebalancing`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - maxFeeUsd
+              oneOf:
+                - title: By token amount
+                  required:
+                    - amount
+                - title: By fraction of the position
+                  required:
+                    - balanceBps
+              properties:
+                amount:
+                  type: string
+                  description: >-
+                    Amount of token to withdraw, as a decimal string. Exactly
+                    one of `amount` or `balanceBps` is required. To withdraw
+                    the whole balance, prefer `balanceBps` to avoid leaving
+                    dust behind, since the position keeps accruing until
+                    execution.
+                  example: '10.5'
+                balanceBps:
+                  type: integer
+                  description: >-
+                    Fraction of the position to withdraw, in basis points
+                    (e.g. 10000 = 100% (full exit), 5000 = 50%). Exactly one
+                    of `amount` or `balanceBps` is required.
+                  minimum: 0
+                  maximum: 10000
+                  example: 10000
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the withdrawn token. Defaults to
+                    the strategy's `wallet`.
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
+      responses:
+        '200':
+          description: >-
+            EIP-712 data to be signed to withdraw from the position managed
+            by the lending rebalancing strategy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - signaturePayload
+                  - requiredApprovals
+                properties:
+                  signaturePayload:
+                    allOf:
+                      - $ref: '#/components/schemas/TriggerSignaturePayload'
+                    description: >-
+                      EIP-712 data to be signed to withdraw from the position
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions that must be signed and
+                      submitted alongside the action signature. Empty when
+                      no approvals are required.
+                    items:
+                      $ref: '#/components/schemas/TransactionRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /stakings/stake:
+    post:
+      tags:
+        - Earn
+      description: >-
+        Submit the signature of the data obtained from `POST /stakings/stake/prepare`,
         along with any required approvals, to deposit ETH into a staking
         protocol to generate yield. Track the execution via
         `GET /stakings/{id}`.
@@ -1397,7 +1636,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /stakings/prepare:
+  /stakings/stake/prepare:
     post:
       tags:
         - Earn
@@ -1406,7 +1645,7 @@ paths:
         protocol to generate yield. Submit the resulting signature, along
         with a signature for each entry in `requiredApprovals` if any are
         returned, via
-        `POST /stakings`.
+        `POST /stakings/stake`.
       requestBody:
         required: true
         content:
@@ -1477,17 +1716,144 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /stakings/unstake:
+    post:
+      tags:
+        - Earn
+      description: >-
+        Submit the signature of the data obtained from
+        `POST /stakings/unstake/prepare`, along with any required approvals, to
+        unstake ETH from a staking protocol. Track the execution via `GET /stakings/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+      responses:
+        '200':
+          $ref: '#/components/responses/SignatureSubmitted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /stakings/unstake/prepare:
+    post:
+      tags:
+        - Earn
+      description: >-
+        Computes EIP-712 data to be signed to unstake ETH from a staking protocol. Submit the resulting
+        signature, along with a signature for each entry in
+        `requiredApprovals` if any are returned, via `POST /stakings/unstake`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chain
+                - token
+                - protocol
+                - wallet
+                - maxFeeUsd
+              oneOf:
+                - title: By token amount
+                  required:
+                    - amount
+                - title: By fraction of the position
+                  required:
+                    - balanceBps
+              properties:
+                chain:
+                  allOf:
+                    - $ref: '#/components/schemas/Chain'
+                  description: Chain where the position exists
+                token:
+                  type: string
+                  description: >-
+                    Underlying token to receive. Choose WETH to receive
+                    wrapped ETH.
+                  enum:
+                    - ETH
+                    - WETH
+                protocol:
+                  type: string
+                  description: Staking protocol to unstake from
+                  enum:
+                    - lido
+                    - rocketpool
+                    - coinbase
+                amount:
+                  type: string
+                  description: >-
+                    Amount of token to unstake, as a decimal string. Exactly
+                    one of `amount` or `balanceBps` is required. To unstake
+                    the whole balance, prefer `balanceBps` to avoid leaving
+                    dust behind.
+                  example: '10.5'
+                balanceBps:
+                  type: integer
+                  description: >-
+                    Fraction of the position to unstake, in basis points
+                    (e.g. 10000 = 100% (full exit), 5000 = 50%). Exactly one
+                    of `amount` or `balanceBps` is required.
+                  minimum: 0
+                  maximum: 10000
+                  example: 10000
+                wallet:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: Address holding the position
+                recipient:
+                  allOf:
+                    - $ref: '#/components/schemas/Address'
+                  description: >-
+                    Address that receives the withdrawn token. Defaults to
+                    `wallet`.
+                maxFeeUsd:
+                  $ref: '#/components/schemas/MaxFeeUsd'
+      responses:
+        '200':
+          description: EIP-712 data to be signed to unstake ETH from a staking protocol
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - signaturePayload
+                  - requiredApprovals
+                properties:
+                  signaturePayload:
+                    allOf:
+                      - $ref: '#/components/schemas/TriggerSignaturePayload'
+                    description: EIP-712 data to be signed to unstake ETH from a staking protocol
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions that must be signed and
+                      submitted alongside the action signature. Empty when
+                      no approvals are required.
+                    items:
+                      $ref: '#/components/schemas/TransactionRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /stakings/{id}:
     get:
       tags:
         - Earn
-      description: Get the status of a staking deposit execution
+      description: >-
+        Get the status of a stake or unstake execution
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /stakings`
+          description: >-
+            ID returned by `POST /stakings/stake` or
+            `POST /stakings/unstake`
       responses:
         '200':
-          description: Status of the staking deposit execution
+          description: Status of the stake or unstake execution
           content:
             application/json:
               schema:
