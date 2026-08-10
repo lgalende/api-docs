@@ -2142,7 +2142,6 @@ paths:
                 - wallet
                 - schedule
                 - slippageBps
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -2182,7 +2181,11 @@ paths:
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
                 maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
+                  allOf:
+                    - $ref: '#/components/schemas/MaxFeeUsd'
+                  description: >-
+                    Omit to let Mimic derive this value from the current fee
+                    estimate.
       responses:
         '200':
           description: EIP-712 data to be signed to create the DCA strategy
@@ -2192,9 +2195,33 @@ paths:
                 type: object
                 required:
                   - signaturePayload
+                  - feeEstimate
                 properties:
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
+                  feeEstimate:
+                    type: object
+                    description: Fee estimate for this strategy
+                    required:
+                      - estimatedFeeUsd
+                      - appliedMaxFeeUsd
+                    properties:
+                      estimatedFeeUsd:
+                        type: string
+                        description: >-
+                          Estimated fee for each on-chain transaction, in
+                          USD, as a decimal string
+                        example: '0.42'
+                      appliedMaxFeeUsd:
+                        allOf:
+                          - $ref: '#/components/schemas/MaxFeeUsd'
+                        description: >-
+                          The value applied, either the `maxFeeUsd` supplied
+                          in the request or one derived from
+                          `estimatedFeeUsd`. May be adjusted in
+                          `signaturePayload.values.input.maxFeeUsd` before
+                          signing.
+                        example: '0.6'
         '400':
           $ref: '#/components/responses/BadRequest'
   /dca/{id}:
