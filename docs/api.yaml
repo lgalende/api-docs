@@ -1390,8 +1390,7 @@ paths:
                     - $ref: '#/components/schemas/Timestamp'
                   description: >-
                     Timestamp after which the strategy stops executing. Only
-                    relevant when `schedule` is set. Use 0 for no end date.
-                    Defaults to 0.
+                    relevant when `schedule` is set. Omit for no end date.
                 maxFeeUsd:
                   $ref: '#/components/schemas/MaxFeeUsd'
       responses:
@@ -1967,7 +1966,9 @@ paths:
                 endDate:
                   allOf:
                     - $ref: '#/components/schemas/Timestamp'
-                  description: Timestamp after which the strategy stops executing. Use 0 for no end date. Defaults to 0.
+                  description: >-
+                    Timestamp after which the strategy stops executing. Omit
+                    for no end date.
                 expectedAddress:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -2142,6 +2143,10 @@ paths:
                 - wallet
                 - schedule
                 - slippageBps
+              not:
+                required:
+                  - endDate
+                  - maxTotalAmount
               properties:
                 chain:
                   allOf:
@@ -2174,7 +2179,19 @@ paths:
                 endDate:
                   allOf:
                     - $ref: '#/components/schemas/Timestamp'
-                  description: Timestamp after which the strategy stops executing. Use 0 for no end date. Defaults to 0.
+                  description: >-
+                    Timestamp after which the strategy stops executing. Omit
+                    for no end date. Cannot be combined with
+                    `maxTotalAmount`.
+                maxTotalAmount:
+                  type: string
+                  description: >-
+                    Maximum cumulative amount of tokenIn the strategy may
+                    spend across all executions, as a decimal string.
+                    Omit for no limit. Cannot be combined with `endDate`.
+                    `endDate` is derived from it, ending the strategy after
+                    the last execution that fits within this limit.
+                  example: '1200.0'
                 recipient:
                   allOf:
                     - $ref: '#/components/schemas/Address'
@@ -2765,7 +2782,7 @@ paths:
                     - $ref: '#/components/schemas/Timestamp'
                   description: >-
                     Timestamp after which the order is cancelled if it
-                    hasn't filled. Use 0 for no expiration. Defaults to 0.
+                    hasn't filled. Omit for no expiration.
                 maxFeeUsd:
                   $ref: '#/components/schemas/MaxFeeUsd'
       responses:
@@ -2959,8 +2976,7 @@ paths:
                     - $ref: '#/components/schemas/Timestamp'
                   description: >-
                     Timestamp after which the strategy stops executing. Only
-                    relevant when `schedule` is set. Use 0 for no end date.
-                    Defaults to 0.
+                    relevant when `schedule` is set. Omit for no end date.
                 maxFeeUsd:
                   $ref: '#/components/schemas/MaxFeeUsd'
       responses:
@@ -3165,8 +3181,7 @@ paths:
                     - $ref: '#/components/schemas/Timestamp'
                   description: >-
                     Timestamp after which the strategy stops executing. Only
-                    relevant when `schedule` is set. Use 0 for no end date.
-                    Defaults to 0.
+                    relevant when `schedule` is set. Omit for no end date.
                 maxFeeUsd:
                   $ref: '#/components/schemas/MaxFeeUsd'
       responses:
