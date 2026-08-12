@@ -3282,11 +3282,12 @@ components:
       required: true
       description: >-
         Client-generated key that makes this request safe to retry. Retrying
-        with the same key returns the original response instead of executing
-        the action twice. Use a value with enough entropy to be unique per
-        request, such as a UUID v4. Keys are scoped to the caller's account
-        and retained for 24 hours, after which the same key may be reused.
-        Reusing a key with a different request body is rejected.
+        with the same key returns the original response, or processes the
+        request if the original request failed. Use a value with enough
+        entropy to be unique per request, such as a UUID v4. Keys are scoped
+        to the caller's account and retained for 24 hours, after which the
+        same key may be reused. Reusing a key with a different request body
+        is rejected.
       schema:
         type: string
         maxLength: 255
@@ -3419,8 +3420,8 @@ components:
     ExternalId:
       type: string
       description: >-
-        Client-supplied identifier for a wallet. Use it to reference a wallet by 
-        an ID from your own system, such as your user's ID
+        Client-supplied identifier for a wallet. Use it to reference a wallet
+        by an ID from your own system, such as your user's ID
       maxLength: 128
       example: user_12345
     BigInteger:
