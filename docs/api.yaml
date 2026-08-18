@@ -39,7 +39,8 @@ tags:
     description: >-
       Single-chain and recurring swap-based actions. Compute EIP-712 data
       to sign via `POST /{action}/prepare`, then submit the signature via
-      `POST /{action}`
+      `POST /{action}`. For DCA, `POST /dca/prepare` also returns an `id`
+      and the signature is submitted via `POST /dca/{id}/execute`
   - name: Bridge
     description: >-
       Cross-chain token transfers. Compute EIP-712 data to sign via
@@ -2098,29 +2099,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-  /dca:
-    post:
-      tags:
-        - Swap
-      description: >-
-        Submit the signature of the data obtained from `POST /dca/prepare`
-        to create the recurring DCA (dollar-cost averaging) strategy.
-        Track the execution via `GET /dca/{id}`.
-      parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
-      requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmission'
-      responses:
-        '200':
-          $ref: '#/components/responses/SignatureSubmitted'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
   /dca/prepare:
     post:
       tags:
@@ -2128,7 +2106,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to create a recurring DCA
         (dollar-cost averaging) strategy. Submit the resulting signature
-        via `POST /dca`.
+        via `POST /dca/{id}/execute`, using the returned `id`.
       requestBody:
         required: true
         content:
@@ -2193,9 +2171,17 @@ paths:
               schema:
                 type: object
                 required:
+                  - id
                   - signaturePayload
                   - executionCost
                 properties:
+                  id:
+                    allOf:
+                      - $ref: '#/components/schemas/UUID'
+                    description: >-
+                      ID for this strategy. Submit the signature via
+                      `POST /dca/{id}/execute` and track its status via
+                      `GET /dca/{id}`.
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
                   executionCost:
@@ -2229,7 +2215,7 @@ paths:
       description: Get the status of the DCA strategy and its executions
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /dca`
+          description: ID returned by `POST /dca/prepare`
       responses:
         '200':
           description: Status of the DCA strategy and its executions
@@ -2268,6 +2254,35 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+  /dca/{id}/execute:
+    post:
+      tags:
+        - Swap
+      description: >-
+        Submit the signature of the data obtained from `POST /dca/prepare`
+        to create the recurring DCA (dollar-cost averaging) strategy.
+        Track the execution via `GET /dca/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /dca/prepare`
+      requestBody:
+        $ref: '#/components/requestBodies/SignatureSubmission'
+      responses:
+        '204':
+          description: >-
+            Signature submitted. Returned again when the same signature is
+            resubmitted for this `id`, so a retry is always safe.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+          description: >-
+            Conflict — a different signature was already submitted for this
+            `id`
   /dca/{id}/stop:
     post:
       tags:
@@ -2278,13 +2293,12 @@ paths:
         /dca/{id}` reports `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /dca`
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /dca/prepare`
       requestBody:
         $ref: '#/components/requestBodies/DeactivationSubmission'
       responses:
-        '200':
-          $ref: '#/components/responses/SignatureSubmitted'
+        '204':
+          description: Signature submitted
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2293,6 +2307,9 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+          description: >-
+            Conflict — the strategy has not been executed yet, so there is
+            nothing to stop
   /dca/{id}/stop/prepare:
     post:
       tags:
@@ -2302,7 +2319,7 @@ paths:
         the resulting signature via `POST /dca/{id}/stop`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /dca`
+          description: ID returned by `POST /dca/prepare`
       responses:
         '200':
           $ref: '#/components/responses/DeactivationPrepared'
@@ -2310,6 +2327,11 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+          description: >-
+            Conflict — the strategy has not been executed yet, so there is
+            nothing to stop
   /stop-loss:
     post:
       tags:
@@ -3579,10 +3601,14 @@ components:
         status:
           type: string
           enum:
+            - pending
             - active
             - stopped
             - expired
-          description: Status of the underlying recurring trigger
+          description: >-
+            Status of the underlying recurring trigger. `pending` means the
+            strategy was prepared but its signature has not been submitted
+            yet, so it has never executed.
         inputs:
           type: object
           description: Key-value map of the original request parameters
