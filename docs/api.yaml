@@ -3604,11 +3604,15 @@ components:
             - pending
             - active
             - stopped
-            - expired
-          description: >-
-            Status of the underlying recurring trigger. `pending` means the
-            strategy was prepared but its signature has not been submitted
-            yet, so it has never executed.
+            - ended
+          description: |-
+            Status of the underlying recurring trigger:
+
+            - `pending` — prepared but its signature has not been submitted
+              yet, so it has never executed
+            - `active` — running on schedule
+            - `stopped` — deactivated via `POST /{action}/{id}/stop`
+            - `ended` — reached its end condition and will not execute again
         inputs:
           type: object
           description: Key-value map of the original request parameters
