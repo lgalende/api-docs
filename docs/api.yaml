@@ -2150,6 +2150,42 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /dca:
+    get:
+      tags:
+        - Swap
+      description: >-
+        List the DCA strategies created under the caller's account,
+        optionally filtered by wallet. Read a single strategy via
+        `GET /dca/{id}` to get portfolio information.
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          description: Only return strategies for this wallet.
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of DCA strategies
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - strategies
+                properties:
+                  strategies:
+                    type: array
+                    description: >-
+                      Matching DCA strategies. Empty when the account has
+                      none, or none match `wallet`.
+                    items:
+                      $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /dca/prepare:
     post:
       tags:
@@ -3708,8 +3744,13 @@ components:
       type: object
       description: Status of a recurring assets management strategy
       required:
+        - id
         - status
       properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: ID of this strategy
         status:
           type: string
           enum:
@@ -3718,7 +3759,7 @@ components:
             - stopped
             - ended
           description: |-
-            Status of the underlying recurring trigger:
+            Status of this strategy:
 
             - `pending` — prepared but its signature has not been submitted
               yet, so it has never executed
