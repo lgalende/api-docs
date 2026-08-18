@@ -15,6 +15,8 @@ info:
 externalDocs:
   description: Find out more about Mimic
   url: https://mimic.fi
+security:
+  - ApiKeyAuth: []
 tags:
   - name: General
     description: Query the chains and settler addresses supported by the API
@@ -61,6 +63,7 @@ paths:
       tags:
         - General
       description: Get supported chains
+      security: []
       responses:
         '200':
           description: List of supported chains
@@ -97,6 +100,7 @@ paths:
         Get Mimic's smart contract address for each supported chain. This
         is the address a user's wallet must allow to move its funds when
         executing an action.
+      security: []
       responses:
         '200':
           description: List of settler addresses for all supported chains
@@ -121,6 +125,7 @@ paths:
         Get Mimic's smart contract address for a supported chain. This is
         the address a user's wallet must allow to move its funds when
         executing an action.
+      security: []
       parameters:
         - name: chain
           in: path
@@ -146,6 +151,7 @@ paths:
       description: >-
         Returns the tokens supported by the API, optionally filtered by
         chain.
+      security: []
       parameters:
         - name: chains
           in: query
@@ -215,6 +221,8 @@ paths:
                         example: 1.0
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /wallets/eoa:
@@ -224,8 +232,6 @@ paths:
       description: >-
         Create a new custodial EOA wallet, generating and storing a new
         keypair managed by Mimic
-      security:
-        - ApiKeyAuth: []
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
@@ -279,8 +285,6 @@ paths:
       description: >-
         List the custodial EOA wallets created under the caller's account,
         optionally filtered by chain, address and/or externalId
-      security:
-        - ApiKeyAuth: []
       parameters:
         - name: chain
           in: query
@@ -414,6 +418,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /wallets/safe/{id}:
     get:
       tags:
@@ -448,6 +454,8 @@ paths:
                         $ref: '#/components/schemas/ExternalId'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /wallets/{wallet}/balances:
@@ -492,6 +500,8 @@ paths:
                     example: '10.5'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /transfers:
     post:
       tags:
@@ -587,6 +597,8 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /transfers/{id}:
     get:
       tags:
@@ -613,6 +625,8 @@ paths:
                           `succeeded`.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /calls:
@@ -715,6 +729,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /calls/{id}:
     get:
       tags:
@@ -749,6 +765,8 @@ paths:
                           $ref: '#/components/schemas/HexString'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /swaps:
@@ -853,6 +871,8 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /swaps/{id}:
     get:
       tags:
@@ -884,6 +904,8 @@ paths:
                           when status is `succeeded`.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /bridges:
@@ -987,6 +1009,8 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /bridges/{id}:
     get:
       tags:
@@ -1025,6 +1049,8 @@ paths:
                           `succeeded`.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /lendings/deposit:
@@ -1130,6 +1156,8 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /lendings/withdraw:
     post:
       tags:
@@ -1253,6 +1281,8 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /lendings/{id}:
     get:
       tags:
@@ -1282,6 +1312,8 @@ paths:
                           `succeeded`.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /lending-rebalancing:
@@ -1410,6 +1442,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /lending-rebalancing/{id}:
     get:
       tags:
@@ -1453,6 +1487,8 @@ paths:
                                 example: '4.85'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /lending-rebalancing/{id}/stop:
@@ -1497,6 +1533,8 @@ paths:
           $ref: '#/components/responses/DeactivationPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /lending-rebalancing/{id}/withdraw:
@@ -1610,6 +1648,8 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /stakings/stake:
@@ -1716,6 +1756,8 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /stakings/unstake:
     post:
       tags:
@@ -1840,6 +1882,8 @@ paths:
                       $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /stakings/{id}:
     get:
       tags:
@@ -1869,6 +1913,8 @@ paths:
                           `succeeded`.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /deposit-splitting:
@@ -2001,6 +2047,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /deposit-splitting/{id}:
     get:
       tags:
@@ -2053,6 +2101,8 @@ paths:
                                         example: '10.3'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /deposit-splitting/{id}/stop:
@@ -2097,6 +2147,8 @@ paths:
           $ref: '#/components/responses/DeactivationPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /dca/prepare:
@@ -2208,6 +2260,8 @@ paths:
                         example: '0.6'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /dca/{id}:
     get:
       tags:
@@ -2252,6 +2306,8 @@ paths:
                                 example: '3387.10'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /dca/{id}/execute:
@@ -2325,6 +2381,8 @@ paths:
           $ref: '#/components/responses/DeactivationPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -2438,6 +2496,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /stop-loss/{id}:
     get:
       tags:
@@ -2471,6 +2531,8 @@ paths:
                                 example: '0.00041'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /stop-loss/{id}/stop:
@@ -2513,6 +2575,8 @@ paths:
           $ref: '#/components/responses/DeactivationPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /take-profit:
@@ -2621,6 +2685,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /take-profit/{id}:
     get:
       tags:
@@ -2654,6 +2720,8 @@ paths:
                                 example: '0.00045'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /take-profit/{id}/stop:
@@ -2696,6 +2764,8 @@ paths:
           $ref: '#/components/responses/DeactivationPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /limit-order:
@@ -2802,6 +2872,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /limit-order/{id}:
     get:
       tags:
@@ -2835,6 +2907,8 @@ paths:
                                 example: '3000.0'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /limit-order/{id}/stop:
@@ -2877,6 +2951,8 @@ paths:
           $ref: '#/components/responses/DeactivationPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /portfolio-rebalancing:
@@ -2998,6 +3074,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /portfolio-rebalancing/{id}:
     get:
       tags:
@@ -3054,6 +3132,8 @@ paths:
                                       example: 5230
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /portfolio-rebalancing/{id}/stop:
@@ -3098,6 +3178,8 @@ paths:
           $ref: '#/components/responses/DeactivationPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /stablecoin-consolidation:
@@ -3203,6 +3285,8 @@ paths:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /stablecoin-consolidation/{id}:
     get:
       tags:
@@ -3224,6 +3308,8 @@ paths:
                 $ref: '#/components/schemas/StrategyStatus'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /stablecoin-consolidation/{id}/stop:
@@ -3268,6 +3354,8 @@ paths:
           $ref: '#/components/responses/DeactivationPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
 components:
@@ -4031,5 +4119,7 @@ components:
       in: header
       name: X-Api-Key
       description: >-
-        API key for your Mimic account, required for custodial
-        wallet-management operations.
+        API key for your Mimic account. Required for every operation except
+        the public reference-data endpoints, which declare `security: []`:
+        `GET /chains`, `GET /settlers`, `GET /settlers/{chain}` and
+        `GET /tokens`.
