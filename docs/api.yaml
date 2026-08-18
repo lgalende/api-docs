@@ -2143,10 +2143,6 @@ paths:
                 - wallet
                 - schedule
                 - slippageBps
-              not:
-                required:
-                  - endDate
-                  - maxTotalAmount
               properties:
                 chain:
                   allOf:
@@ -2176,21 +2172,13 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/CronExpression'
                   description: How often the DCA swap executes
-                endDate:
-                  allOf:
-                    - $ref: '#/components/schemas/Timestamp'
-                  description: >-
-                    Timestamp after which the strategy stops executing. Omit
-                    for no end date. Cannot be combined with
-                    `maxTotalAmount`.
                 maxTotalAmount:
                   type: string
                   description: >-
                     Maximum cumulative amount of tokenIn the strategy may
                     spend across all executions, as a decimal string.
-                    Omit for no limit. Cannot be combined with `endDate`.
-                    `endDate` is derived from it, ending the strategy after
-                    the last execution that fits within this limit.
+                    Omit for no limit. The strategy stops after the last
+                    execution that fits within this limit.
                   example: '1200.0'
                 recipient:
                   allOf:
