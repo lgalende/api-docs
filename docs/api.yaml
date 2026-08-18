@@ -2197,12 +2197,6 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
-                maxFeeUsd:
-                  allOf:
-                    - $ref: '#/components/schemas/MaxFeeUsd'
-                  description: >-
-                    Omit to let Mimic derive this value from the current fee
-                    estimate.
       responses:
         '200':
           description: EIP-712 data to be signed to create the DCA strategy
@@ -2212,32 +2206,31 @@ paths:
                 type: object
                 required:
                   - signaturePayload
-                  - feeEstimate
+                  - executionCost
                 properties:
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
-                  feeEstimate:
+                  executionCost:
                     type: object
-                    description: Fee estimate for this strategy
+                    description: Estimated cost per execution for this strategy
                     required:
-                      - estimatedFeeUsd
-                      - appliedMaxFeeUsd
+                      - estimatedUsdPerExecution
+                      - maxUsdPerExecution
                     properties:
-                      estimatedFeeUsd:
+                      estimatedUsdPerExecution:
                         type: string
                         description: >-
                           Estimated fee for each on-chain transaction, in
                           USD, as a decimal string
                         example: '0.42'
-                      appliedMaxFeeUsd:
+                      maxUsdPerExecution:
                         allOf:
                           - $ref: '#/components/schemas/MaxFeeUsd'
                         description: >-
-                          The value applied, either the `maxFeeUsd` supplied
-                          in the request or one derived from
-                          `estimatedFeeUsd`. May be adjusted in
-                          `signaturePayload.values.input.maxFeeUsd` before
-                          signing.
+                          The maximum fee applied per execution, derived from
+                          `estimatedUsdPerExecution`. If the fee of a given
+                          execution would exceed this value, that execution
+                          is skipped.
                         example: '0.6'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -3452,7 +3445,8 @@ components:
       type: string
       description: >-
         Maximum fee to cover the cost of each on-chain transaction, in USD,
-        as a decimal string.
+        as a decimal string. A transaction whose fee would exceed this value
+        is not executed.
       example: '0.5'
     SlippageBps:
       type: integer
