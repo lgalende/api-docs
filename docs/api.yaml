@@ -1449,15 +1449,14 @@ paths:
       tags:
         - Earn
       description: >-
-        Get the status of the lending rebalancing strategy and its
-        executions
+        Get the status of the lending rebalancing strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /lending-rebalancing`
       responses:
         '200':
           description: >-
-            Status of the lending rebalancing strategy and its executions
+            Status of the lending rebalancing strategy
           content:
             application/json:
               schema:
@@ -2054,13 +2053,13 @@ paths:
       tags:
         - Assets management
       description: >-
-        Get the status of the deposit splitting strategy and its executions
+        Get the status of the deposit splitting strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /deposit-splitting`
       responses:
         '200':
-          description: Status of the deposit splitting strategy and its executions
+          description: Status of the deposit splitting strategy
           content:
             application/json:
               schema:
@@ -2266,13 +2265,13 @@ paths:
     get:
       tags:
         - Swap
-      description: Get the status of the DCA strategy and its executions
+      description: Get the status of the DCA strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /dca/prepare`
       responses:
         '200':
-          description: Status of the DCA strategy and its executions
+          description: Status of the DCA strategy
           content:
             application/json:
               schema:
@@ -2339,6 +2338,35 @@ paths:
           description: >-
             Conflict — a different signature was already submitted for this
             `id`
+  /dca/{id}/executions:
+    get:
+      tags:
+        - Swap
+      description: Get the most recent executions of the DCA strategy
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /dca/prepare`
+      responses:
+        '200':
+          description: Most recent executions of the DCA strategy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                properties:
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending
+                    items:
+                      $ref: '#/components/schemas/StrategyExecution'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /dca/{id}/stop:
     post:
       tags:
@@ -2502,13 +2530,13 @@ paths:
     get:
       tags:
         - Swap
-      description: Get the status of the stop-loss strategy and its executions
+      description: Get the status of the stop-loss strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /stop-loss`
       responses:
         '200':
-          description: Status of the stop-loss strategy and its executions
+          description: Status of the stop-loss strategy
           content:
             application/json:
               schema:
@@ -2691,13 +2719,13 @@ paths:
     get:
       tags:
         - Swap
-      description: Get the status of the take-profit strategy and its executions
+      description: Get the status of the take-profit strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /take-profit`
       responses:
         '200':
-          description: Status of the take-profit strategy and its executions
+          description: Status of the take-profit strategy
           content:
             application/json:
               schema:
@@ -2878,13 +2906,13 @@ paths:
     get:
       tags:
         - Swap
-      description: Get the status of the limit order and its executions
+      description: Get the status of the limit order
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /limit-order`
       responses:
         '200':
-          description: Status of the limit order and its executions
+          description: Status of the limit order
           content:
             application/json:
               schema:
@@ -3081,15 +3109,14 @@ paths:
       tags:
         - Assets management
       description: >-
-        Get the status of the portfolio rebalancing strategy and its
-        executions
+        Get the status of the portfolio rebalancing strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /portfolio-rebalancing`
       responses:
         '200':
           description: >-
-            Status of the portfolio rebalancing strategy and its executions
+            Status of the portfolio rebalancing strategy
           content:
             application/json:
               schema:
@@ -3292,16 +3319,14 @@ paths:
       tags:
         - Assets management
       description: >-
-        Get the status of the stablecoin consolidation strategy and its
-        executions
+        Get the status of the stablecoin consolidation strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /stablecoin-consolidation`
       responses:
         '200':
           description: >-
-            Status of the stablecoin consolidation strategy and its
-            executions
+            Status of the stablecoin consolidation strategy
           content:
             application/json:
               schema:
@@ -3681,10 +3706,9 @@ components:
                 example: '35245.67'
     StrategyStatus:
       type: object
-      description: Status of a recurring assets management strategy and its most recent executions
+      description: Status of a recurring assets management strategy
       required:
         - status
-        - executions
       properties:
         status:
           type: string
@@ -3710,25 +3734,22 @@ components:
           description: >-
             Timestamp of the next scheduled execution. Omitted when
             `status` is not `active`.
-        executions:
-          type: array
-          description: Most recent executions, ordered by timestamp descending
-          items:
-            description: Status of a single execution of a recurring strategy
-            allOf:
-              - $ref: '#/components/schemas/ExecutionStatus'
-              - type: object
-                properties:
-                  swaps:
-                    type: array
-                    description: Single-chain or cross-chain swaps that occurred during this execution
-                    items:
-                      $ref: '#/components/schemas/Swap'
         portfolio:
           allOf:
             - $ref: '#/components/schemas/PortfolioSnapshot'
           description: >-
             Current balances and information relevant to this strategy
+    StrategyExecution:
+      description: Status of a single execution of a recurring strategy
+      allOf:
+        - $ref: '#/components/schemas/ExecutionStatus'
+        - type: object
+          properties:
+            swaps:
+              type: array
+              description: Single-chain or cross-chain swaps that occurred during this execution
+              items:
+                $ref: '#/components/schemas/Swap'
     Settler:
       type: object
       description: >-
