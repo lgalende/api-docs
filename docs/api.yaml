@@ -216,9 +216,10 @@ paths:
                       - price
                     properties:
                       price:
-                        type: number
-                        description: Current token price in USD
-                        example: 1.0
+                        type: string
+                        description: >-
+                          Current token price in USD, as a decimal string
+                        example: '1.0'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2181,7 +2182,7 @@ paths:
                       Matching DCA strategies. Empty when the account has
                       none, or none match `wallet`.
                     items:
-                      $ref: '#/components/schemas/StrategyStatus'
+                      $ref: '#/components/schemas/DcaStrategy'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2199,57 +2200,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - chain
-                - tokenIn
-                - tokenOut
-                - amount
-                - wallet
-                - schedule
-                - slippageBps
-              properties:
-                chain:
-                  allOf:
-                    - $ref: '#/components/schemas/Chain'
-                  description: Chain where the swap will be executed
-                tokenIn:
-                  allOf:
-                    - $ref: '#/components/schemas/Address'
-                  description: Token to spend on each execution. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
-                tokenOut:
-                  allOf:
-                    - $ref: '#/components/schemas/Address'
-                  description: Token to accumulate. Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native token.
-                amount:
-                  type: string
-                  description: Amount of tokenIn to spend per execution, as a decimal string
-                  example: '10.5'
-                wallet:
-                  allOf:
-                    - $ref: '#/components/schemas/Address'
-                  description: >-
-                    Address from where the funds will be pulled. EOAs are
-                    not supported (unless they use proper EIP-7702 delegation).
-                slippageBps:
-                  $ref: '#/components/schemas/SlippageBps'
-                schedule:
-                  allOf:
-                    - $ref: '#/components/schemas/CronExpression'
-                  description: How often the DCA swap executes
-                maxTotalAmount:
-                  type: string
-                  description: >-
-                    Maximum cumulative amount of tokenIn the strategy may
-                    spend across all executions, as a decimal string.
-                    Omit for no limit. The strategy stops after the last
-                    execution that fits within this limit.
-                  example: '1200.0'
-                recipient:
-                  allOf:
-                    - $ref: '#/components/schemas/Address'
-                  description: >-
-                    Address that receives the tokenOut. Defaults to `wallet`.
+              $ref: '#/components/schemas/DcaInputs'
       responses:
         '200':
           description: EIP-712 data to be signed to create the DCA strategy
@@ -2312,7 +2263,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/StrategyStatus'
+                  - $ref: '#/components/schemas/DcaStrategy'
                   - type: object
                     properties:
                       portfolio:
@@ -3786,11 +3737,83 @@ components:
         - $ref: '#/components/schemas/ExecutionStatus'
         - type: object
           properties:
+            costUsd:
+              type: string
+              description: >-
+                Fee actually paid for this execution, in USD, as a decimal
+                string. Omitted while `status` is `pending`.
+              example: '0.41'
             swaps:
               type: array
               description: Single-chain or cross-chain swaps that occurred during this execution
               items:
                 $ref: '#/components/schemas/Swap'
+    DcaInputs:
+      type: object
+      description: Parameters that define a DCA strategy
+      required:
+        - chain
+        - tokenIn
+        - tokenOut
+        - amount
+        - wallet
+        - slippageBps
+        - schedule
+      properties:
+        chain:
+          allOf:
+            - $ref: '#/components/schemas/Chain'
+          description: Chain where the swap is executed
+        tokenIn:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Token spent on each execution
+        tokenOut:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Token accumulated
+        amount:
+          type: string
+          description: Amount of tokenIn spent per execution, as a decimal string
+          example: '10.5'
+        wallet:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Address the funds are pulled from
+        slippageBps:
+          $ref: '#/components/schemas/SlippageBps'
+        schedule:
+          allOf:
+            - $ref: '#/components/schemas/CronExpression'
+          description: How often the DCA swap executes
+        maxTotalAmount:
+          type: string
+          description: >-
+            Maximum cumulative amount of tokenIn the strategy may spend
+            across all executions, as a decimal string. The strategy stops
+            after the last execution that fits within this limit. Omit for
+            no limit.
+          example: '1200.0'
+        recipient:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Address that receives the tokenOut
+    DcaStrategy:
+      description: A DCA strategy and its current status
+      allOf:
+        - $ref: '#/components/schemas/StrategyStatus'
+        - type: object
+          required:
+            - maxUsdPerExecution
+          properties:
+            inputs:
+              $ref: '#/components/schemas/DcaInputs'
+            maxUsdPerExecution:
+              allOf:
+                - $ref: '#/components/schemas/MaxFeeUsd'
+              description: >-
+                Maximum fee applied per execution, derived by
+                `POST /dca/prepare`
     Settler:
       type: object
       description: >-
