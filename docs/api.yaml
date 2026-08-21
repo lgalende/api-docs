@@ -1491,7 +1491,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /lending-rebalancing/{id}/stop:
+  /lending-rebalancing/{id}/stop/execute:
     post:
       tags:
         - Earn
@@ -1524,7 +1524,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to stop the lending rebalancing
         strategy. Submit the resulting signature via `POST /lending-
-        rebalancing/{id}/stop`.
+        rebalancing/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /lending-rebalancing`
@@ -1546,7 +1546,7 @@ paths:
         `POST /lending-rebalancing/{id}/withdraw/prepare`, along with any
         required approvals, to withdraw from the position managed by the
         lending rebalancing strategy. Withdrawing does not stop the
-        strategy. Call `POST /lending-rebalancing/{id}/stop` to stop it.
+        strategy. Call `POST /lending-rebalancing/{id}/stop/execute` to stop it.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /lending-rebalancing`
@@ -2105,7 +2105,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /deposit-splitting/{id}/stop:
+  /deposit-splitting/{id}/stop/execute:
     post:
       tags:
         - Assets management
@@ -2138,7 +2138,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to stop the deposit splitting
         strategy. Submit the resulting signature via `POST /deposit-
-        splitting/{id}/stop`.
+        splitting/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /deposit-splitting`
@@ -2193,8 +2193,9 @@ paths:
         - Swap
       description: >-
         Computes EIP-712 data to be signed to create a recurring DCA
-        (dollar-cost averaging) strategy. Submit the resulting signature
-        via `POST /dca/{id}/execute`, using the returned `id`.
+        (dollar-cost averaging) strategy. Submit the resulting signature,
+        along with a signature for each entry in `requiredApprovals` if any
+        are returned, via `POST /dca/{id}/execute`, using the returned `id`.
       requestBody:
         required: true
         content:
@@ -2212,6 +2213,7 @@ paths:
                   - id
                   - signaturePayload
                   - executionCost
+                  - requiredApprovals
                 properties:
                   id:
                     allOf:
@@ -2244,6 +2246,16 @@ paths:
                           execution would exceed this value, that execution
                           is skipped.
                         example: '0.6'
+                  requiredApprovals:
+                    type: array
+                    description: >-
+                      Raw `approve()` transactions authorizing the settler to
+                      spend `tokenIn`, which must be signed and submitted
+                      alongside the action signature via
+                      `POST /dca/{id}/execute`. Empty when no approvals are
+                      required.
+                    items:
+                      $ref: '#/components/schemas/TransactionRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2301,14 +2313,15 @@ paths:
       tags:
         - Swap
       description: >-
-        Submit the signature of the data obtained from `POST /dca/prepare`
-        to create the recurring DCA (dollar-cost averaging) strategy.
-        Track the execution via `GET /dca/{id}`.
+        Submit the signature of the data obtained from `POST /dca/prepare`,
+        along with a signature for each `requiredApprovals` entry it
+        returned, to create the recurring DCA (dollar-cost averaging)
+        strategy. Track the execution via `GET /dca/{id}`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /dca/prepare`
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmission'
+        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
       responses:
         '204':
           description: >-
@@ -2354,14 +2367,15 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /dca/{id}/stop:
+  /dca/{id}/stop/execute:
     post:
       tags:
         - Swap
       description: >-
         Submit the signature of the data obtained from `POST
-        /dca/{id}/stop/prepare` to stop the DCA strategy. Once stopped, `GET
-        /dca/{id}` reports `status` as `stopped`.
+        /dca/{id}/stop/prepare` to stop the DCA strategy, optionally along
+        with a signature for each `revocations` entry it returned. Once
+        stopped, `GET /dca/{id}` reports `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /dca/prepare`
@@ -2386,8 +2400,9 @@ paths:
       tags:
         - Swap
       description: >-
-        Computes EIP-712 data to be signed to stop the DCA strategy. Submit
-        the resulting signature via `POST /dca/{id}/stop`.
+        Computes EIP-712 data to be signed to stop the DCA strategy, along
+        with the transactions that remove the settler's allowance. Submit the
+        resulting signature via `POST /dca/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /dca/prepare`
@@ -2550,7 +2565,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stop-loss/{id}/stop:
+  /stop-loss/{id}/stop/execute:
     post:
       tags:
         - Swap
@@ -2581,7 +2596,7 @@ paths:
         - Swap
       description: >-
         Computes EIP-712 data to be signed to stop the stop-loss strategy.
-        Submit the resulting signature via `POST /stop-loss/{id}/stop`.
+        Submit the resulting signature via `POST /stop-loss/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /stop-loss`
@@ -2739,7 +2754,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /take-profit/{id}/stop:
+  /take-profit/{id}/stop/execute:
     post:
       tags:
         - Swap
@@ -2770,7 +2785,7 @@ paths:
         - Swap
       description: >-
         Computes EIP-712 data to be signed to stop the take-profit strategy.
-        Submit the resulting signature via `POST /take-profit/{id}/stop`.
+        Submit the resulting signature via `POST /take-profit/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /take-profit`
@@ -2926,7 +2941,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /limit-order/{id}/stop:
+  /limit-order/{id}/stop/execute:
     post:
       tags:
         - Swap
@@ -2957,7 +2972,7 @@ paths:
         - Swap
       description: >-
         Computes EIP-712 data to be signed to stop the limit order. Submit the
-        resulting signature via `POST /limit-order/{id}/stop`.
+        resulting signature via `POST /limit-order/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /limit-order`
@@ -3150,7 +3165,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /portfolio-rebalancing/{id}/stop:
+  /portfolio-rebalancing/{id}/stop/execute:
     post:
       tags:
         - Assets management
@@ -3183,7 +3198,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to stop the portfolio rebalancing
         strategy. Submit the resulting signature via `POST /portfolio-
-        rebalancing/{id}/stop`.
+        rebalancing/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /portfolio-rebalancing`
@@ -3324,7 +3339,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stablecoin-consolidation/{id}/stop:
+  /stablecoin-consolidation/{id}/stop/execute:
     post:
       tags:
         - Assets management
@@ -3357,7 +3372,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to stop the stablecoin
         consolidation strategy. Submit the resulting signature via `POST
-        /stablecoin-consolidation/{id}/stop`.
+        /stablecoin-consolidation/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /stablecoin-consolidation`
@@ -3418,7 +3433,7 @@ components:
             properties:
               signature:
                 $ref: '#/components/schemas/TriggerSignature'
-              approvals:
+              signedApprovals:
                 type: array
                 description: >-
                   Signed and RLP-encoded `approve()` transactions authorizing the
@@ -3438,6 +3453,16 @@ components:
             properties:
               signature:
                 $ref: '#/components/schemas/DeactivateTriggersSignature'
+              signedRevocations:
+                type: array
+                description: >-
+                  Signed and RLP-encoded `approve()` transactions setting the
+                  settler's allowance back to zero, matching the `revocations`
+                  entries in the `/stop/prepare` response. Optional: the
+                  strategy stops either way, and omitting them leaves the
+                  existing allowance in place.
+                items:
+                  $ref: '#/components/schemas/HexString'
   responses:
     SignatureSubmitted:
       description: Signature submitted
@@ -3455,16 +3480,29 @@ components:
                   ID for this request, returned to track its status via
                   `GET /{action}/{id}`
     DeactivationPrepared:
-      description: EIP-712 data to be signed to stop the strategy
+      description: >-
+        EIP-712 data to be signed to stop the strategy, and the transactions
+        that remove the settler's allowance
       content:
         application/json:
           schema:
             type: object
             required:
               - signaturePayload
+              - revocations
             properties:
               signaturePayload:
                 $ref: '#/components/schemas/DeactivateTriggersSignaturePayload'
+              revocations:
+                type: array
+                description: >-
+                  Raw `approve()` transactions setting the settler's allowance
+                  back to zero, so no spending permission is left behind once
+                  the strategy is stopped. Signing and submitting them via
+                  `POST /{action}/{id}/stop/execute` is optional. Empty when
+                  there is no allowance to remove.
+                items:
+                  $ref: '#/components/schemas/TransactionRequest'
     BadRequest:
       description: Bad request — invalid parameters or body
       content:
@@ -3715,7 +3753,7 @@ components:
             - `pending` — prepared but its signature has not been submitted
               yet, so it has never executed
             - `active` — running on schedule
-            - `stopped` — deactivated via `POST /{action}/{id}/stop`
+            - `stopped` — deactivated via `POST /{action}/{id}/stop/execute`
             - `ended` — reached its end condition and will not execute again
         inputs:
           type: object
