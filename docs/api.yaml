@@ -2196,6 +2196,8 @@ paths:
         (dollar-cost averaging) strategy. Submit the resulting signature,
         along with a signature for each entry in `requiredApprovals` if any
         are returned, via `POST /dca/{id}/execute`, using the returned `id`.
+        This response expires at `signBefore`. Past that, call `/dca/prepare` again for
+        a fresh payload.
       requestBody:
         required: true
         content:
@@ -2211,6 +2213,7 @@ paths:
                 type: object
                 required:
                   - id
+                  - signBefore
                   - signaturePayload
                   - executionCost
                   - requiredApprovals
@@ -2222,6 +2225,11 @@ paths:
                       ID for this strategy. Submit the signature via
                       `POST /dca/{id}/execute` and track its status via
                       `GET /dca/{id}`.
+                  signBefore:
+                    allOf:
+                      - $ref: '#/components/schemas/Timestamp'
+                    description: >-
+                      Deadline for submitting the signature via `POST /dca/{id}/execute`
                   signaturePayload:
                     $ref: '#/components/schemas/TriggerSignaturePayload'
                   executionCost:
@@ -2316,7 +2324,10 @@ paths:
         Submit the signature of the data obtained from `POST /dca/prepare`,
         along with a signature for each `requiredApprovals` entry it
         returned, to create the recurring DCA (dollar-cost averaging)
-        strategy. Track the execution via `GET /dca/{id}`.
+        strategy.
+        Call this before the `signBefore` deadline returned by `POST /dca/prepare`. Past it
+        the payload becomes stale.
+        Track the execution via `GET /dca/{id}`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /dca/prepare`
@@ -2337,7 +2348,8 @@ paths:
           $ref: '#/components/responses/Conflict'
           description: >-
             Conflict — a different signature was already submitted for this
-            `id`
+            `id`, or the signing window closed before this one arrived and
+            the strategy is now `stale`
   /dca/{id}/executions:
     get:
       tags:
@@ -2382,8 +2394,8 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/DeactivationSubmission'
       responses:
-        '204':
-          description: Signature submitted
+        '200':
+          $ref: '#/components/responses/DeactivationSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3500,9 +3512,59 @@ components:
                   back to zero, so no spending permission is left behind once
                   the strategy is stopped. Signing and submitting them via
                   `POST /{action}/{id}/stop/execute` is optional. Empty when
-                  there is no allowance to remove.
+                  there is no allowance to remove, and also when another
+                  strategy on the same wallet and token is still live — the
+                  allowance is shared, so zeroing it would stop that one from
+                  executing.
                 items:
                   $ref: '#/components/schemas/TransactionRequest'
+    DeactivationSubmitted:
+      description: >-
+        Signature submitted, with the outcome of any revocations that came
+        with it
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - revocations
+            properties:
+              revocations:
+                type: array
+                description: >-
+                  Outcome of each entry submitted in `signedRevocations`, in
+                  the same order. Empty when none were submitted. The strategy
+                  is stopped regardless of what these report, so a `failed` or
+                  `skipped` entry leaves the allowance in place without
+                  affecting the stop itself.
+                items:
+                  type: object
+                  required:
+                    - status
+                  properties:
+                    status:
+                      type: string
+                      enum:
+                        - succeeded
+                        - failed
+                        - skipped
+                      description: |-
+                        Outcome of this revocation:
+
+                        - `succeeded` — confirmed on chain, the allowance is
+                          now zero
+                        - `failed` — rejected when broadcast, reverted, or not
+                          confirmed in time
+                        - `skipped` — not broadcast, because another strategy
+                          on the same wallet and token became live after
+                          `/stop/prepare` returned and still needs the
+                          allowance
+                    txHash:
+                      allOf:
+                        - $ref: '#/components/schemas/HexString'
+                      description: >-
+                        Transaction hash. Absent when status is `skipped`,
+                        since nothing was broadcast.
     BadRequest:
       description: Bad request — invalid parameters or body
       content:
@@ -3629,6 +3691,7 @@ components:
             - pending
             - succeeded
             - failed
+            - skipped
         inputs:
           type: object
           description: Key-value map of the original request parameters
@@ -3744,6 +3807,7 @@ components:
           type: string
           enum:
             - pending
+            - stale
             - active
             - stopped
             - ended
@@ -3752,6 +3816,8 @@ components:
 
             - `pending` — prepared but its signature has not been submitted
               yet, so it has never executed
+            - `stale` — the signature was not submitted before the
+              `signBefore` deadline, so it will never execute
             - `active` — running on schedule
             - `stopped` — deactivated via `POST /{action}/{id}/stop/execute`
             - `ended` — reached its end condition and will not execute again
@@ -4025,7 +4091,7 @@ components:
       type: object
       description: An unsigned raw transaction that must be signed before it can be submitted.
       required:
-        - chain
+        - chainId
         - from
         - to
         - nonce
