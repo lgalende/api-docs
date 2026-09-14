@@ -3642,17 +3642,17 @@ components:
                         - succeeded
                         - failed
                         - skipped
-                      description: |-
-                        Outcome of this revocation:
-
-                        - `succeeded` — confirmed on chain, the allowance is
-                          now zero.
-                        - `failed` — rejected when broadcast, reverted, or not
-                          confirmed in time.
-                        - `skipped` — not broadcast, because another strategy
-                          on the same wallet and token became live after
-                          `/stop/prepare` returned and still needs the
-                          allowance.
+                      description: Outcome of this revocation.
+                      x-enumDescriptions:
+                        succeeded: >-
+                          Confirmed on chain, the allowance is now zero.
+                        failed: >-
+                          Rejected when broadcast, reverted, or not confirmed
+                          in time.
+                        skipped: >-
+                          Not broadcast, because another strategy on the same
+                          wallet and token became live after `/stop/prepare`
+                          returned and still needs the allowance.
                     txHash:
                       allOf:
                         - $ref: '#/components/schemas/HexString'
@@ -3786,6 +3786,19 @@ components:
             - succeeded
             - failed
             - skipped
+          description: Status of this execution.
+          x-enumDescriptions:
+            pending: >-
+              Still in flight — queued or submitted, but not yet resolved on
+              chain.
+            succeeded: >-
+              Every intent in the execution completed successfully.
+            failed: >-
+              The execution was invalid, or at least one of its intents was
+              discarded, expired or failed.
+            skipped: >-
+              The trigger fired but produced no intents, so nothing was
+              submitted on chain.
         inputs:
           type: object
           description: Key-value map of the original request parameters.
@@ -3916,16 +3929,17 @@ components:
             - active
             - stopped
             - ended
-          description: |-
-            Status of this strategy:
-
-            - `pending` — prepared but its signature has not been submitted
-              yet, so it has never executed.
-            - `stale` — the signature was not submitted before the
-              `signBefore` deadline, so it will never execute.
-            - `active` — running on schedule.
-            - `stopped` — deactivated via `POST /{action}/{id}/stop/execute`.
-            - `ended` — reached its end condition and will not execute again.
+          description: Status of this strategy.
+          x-enumDescriptions:
+            pending: >-
+              Prepared but its signature has not been submitted yet, so it has
+              never executed.
+            stale: >-
+              The signature was not submitted before the `signBefore`
+              deadline, so it will never execute.
+            active: Running on schedule.
+            stopped: Deactivated via `POST /{action}/{id}/stop/execute`.
+            ended: Reached its end condition and will not execute again.
         inputs:
           type: object
           description: Key-value map of the original request parameters.
@@ -4328,11 +4342,11 @@ components:
         - 0
         - 1
         - 2
-      description: |
-        Trigger execution mode:
-        - `0` — Cron: fires on a recurring cron schedule.
-        - `1` — Event: fires on an on-chain event.
-        - `2` — Once: fires exactly once at a specific time.
+      description: Trigger execution mode.
+      x-enumDescriptions:
+        '0': Cron — fires on a recurring cron schedule.
+        '1': Event — fires on an on-chain event.
+        '2': Once — fires exactly once at a specific time.
     TriggerTypes:
       type: object
       required:
