@@ -2217,6 +2217,7 @@ paths:
                   - signaturePayload
                   - executionCost
                   - requiredApprovals
+                  - policies
                 properties:
                   id:
                     allOf:
@@ -2264,6 +2265,15 @@ paths:
                       required.
                     items:
                       $ref: '#/components/schemas/TransactionRequest'
+                  policies:
+                    type: array
+                    description: >-
+                      EIP-712 payloads authorizing the safeguards that restrict
+                      what Mimic may do with this wallet. Each must be signed and
+                      submitted as `signedPolicies` via `POST /dca/{id}/execute`.
+                      Empty when the wallet is already safeguarded.
+                    items:
+                      $ref: '#/components/schemas/SafeguardSignaturePayload'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3454,6 +3464,15 @@ components:
                   Omit or leave empty when `requiredApprovals` was empty.
                 items:
                   $ref: '#/components/schemas/HexString'
+              signedPolicies:
+                type: array
+                description: >-
+                  EIP-712 signatures over the `policies` entries returned by
+                  `/prepare`, in the same order. Required whenever `policies`
+                  was not empty: without them the safeguards are never set and
+                  the request is rejected.
+                items:
+                  $ref: '#/components/schemas/Signature'
     DeactivationSubmission:
       required: true
       content:
@@ -3716,7 +3735,7 @@ components:
         - tokenIn
         - tokenOut
         - amountIn
-        - amountOut
+        - minAmountOut
       properties:
         sourceChain:
           allOf:
@@ -3742,8 +3761,19 @@ components:
           example: '10.5'
         amountOut:
           type: string
-          description: Amount of tokenOut received, as a decimal string
+          description: >-
+            Actual amount of tokenOut received, as a decimal string. Read from
+            the settlement transaction, so it is omitted until the swap has
+            settled on chain.
           example: '10.3'
+        minAmountOut:
+          type: string
+          description: >-
+            Least amount of tokenOut the action would accept, as a decimal
+            string. Derived from `slippageBps` when the action was signed, so
+            it is always present and is a floor the settlement is guaranteed to
+            have met.
+          example: '10.1'
         txHash:
           allOf:
             - $ref: '#/components/schemas/HexString'
@@ -3901,7 +3931,10 @@ components:
         recipient:
           allOf:
             - $ref: '#/components/schemas/Address'
-          description: Address that receives the tokenOut
+          description: >-
+            Address that receives the tokenOut. Must equal `wallet` while the
+            safeguard set by `policies` allows the wallet as the only swap
+            recipient. Defaults to `wallet` when omitted.
     DcaStrategy:
       description: A DCA strategy and its current status
       allOf:
@@ -3978,6 +4011,79 @@ components:
         version:
           type: string
           example: '1'
+    SettlerDomain:
+      type: object
+      description: EIP-712 domain of the settler contract the safeguard is set on
+      required:
+        - name
+        - version
+        - chainId
+        - verifyingContract
+      properties:
+        name:
+          type: string
+          example: Mimic Protocol Settler
+        version:
+          type: string
+          example: '1'
+        chainId:
+          allOf:
+            - $ref: '#/components/schemas/ChainId'
+          description: Chain of the settler this authorization applies to
+        verifyingContract:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+          description: Settler contract address
+    SafeguardSignaturePayload:
+      type: object
+      description: >-
+        EIP-712 data to be signed to authorize the safeguards that restrict what
+        Mimic may do with the wallet. The safeguard allows swaps that pay out to
+        the wallet itself and denies every other kind of operation.
+      required:
+        - domain
+        - primaryType
+        - types
+        - values
+      properties:
+        domain:
+          $ref: '#/components/schemas/SettlerDomain'
+        primaryType:
+          type: string
+          example: 'SafeguardAuthorization'
+        types:
+          type: object
+          required:
+            - SafeguardAuthorization
+          properties:
+            SafeguardAuthorization:
+              type: array
+              items:
+                $ref: '#/components/schemas/TypedDataField'
+        values:
+          type: object
+          required:
+            - user
+            - safeguard
+            - nonce
+            - deadline
+          properties:
+            user:
+              allOf:
+                - $ref: '#/components/schemas/Address'
+              description: Wallet the safeguard belongs to
+            safeguard:
+              allOf:
+                - $ref: '#/components/schemas/HexString'
+              description: Encoded safeguard configuration
+            nonce:
+              allOf:
+                - $ref: '#/components/schemas/BigInteger'
+              description: Unique value preventing this authorization from being replayed
+            deadline:
+              allOf:
+                - $ref: '#/components/schemas/BigInteger'
+              description: Unix timestamp in seconds by which the safeguard must be set
     TriggerSignaturePayload:
       type: object
       description: EIP-712 data to be signed to authorize a function execution
