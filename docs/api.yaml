@@ -41,8 +41,40 @@ tags:
     description: >-
       Single-chain and recurring swap-based actions. Compute EIP-712 data
       to sign via `POST /{action}/prepare`, then submit the signature via
-      `POST /{action}`. For DCA, `POST /dca/prepare` also returns an `id`
-      and the signature is submitted via `POST /dca/{id}/execute`
+      `POST /{action}`
+  - name: Swaps
+    x-parent: Swap
+    description: >-
+      Swap one token for another on a single chain. Compute EIP-712 data
+      to sign via `POST /swaps/prepare`, then submit the signature via
+      `POST /swaps`
+  - name: DCA
+    x-parent: Swap
+    description: >-
+      Recurring dollar-cost averaging strategy. Compute EIP-712 data to
+      sign via `POST /dca/prepare`, which also returns an `id`, then
+      submit the signature via `POST /dca/{id}/execute`
+  - name: Stop loss
+    x-parent: Swap
+    description: >-
+      Monitor a token's exchange rate and swap it once it falls to or
+      below a threshold. Compute EIP-712 data to sign via
+      `POST /stop-loss/prepare`, then submit the signature via
+      `POST /stop-loss`
+  - name: Take profit
+    x-parent: Swap
+    description: >-
+      Monitor a token's exchange rate and swap it once it rises to or
+      above a threshold. Compute EIP-712 data to sign via
+      `POST /take-profit/prepare`, then submit the signature via
+      `POST /take-profit`
+  - name: Limit order
+    x-parent: Swap
+    description: >-
+      Swap a fixed amount of `tokenIn` for `tokenOut` once the market rate
+      reaches or exceeds the requested `limitRate`. Compute EIP-712 data
+      to sign via `POST /limit-order/prepare`, then submit the signature
+      via `POST /limit-order`
   - name: Bridge
     description: >-
       Cross-chain token transfers. Compute EIP-712 data to sign via
@@ -52,11 +84,54 @@ tags:
       Lending, staking and yield strategies. Compute EIP-712 data
       to sign via `POST /{action}/prepare`, then submit the signature via
       `POST /{action}`
+  - name: Lendings
+    x-parent: Earn
+    description: >-
+      Deposit a token into a lending protocol to generate yield, or
+      withdraw it. Compute EIP-712 data to sign via
+      `POST /lendings/{action}/prepare`, then submit the signature via
+      `POST /lendings/{action}`
+  - name: Lending rebalancing
+    x-parent: Earn
+    description: >-
+      Move a deposit to the highest-yielding of the selected lending
+      protocols, either once or as a recurring strategy that keeps
+      monitoring APY. Compute EIP-712 data to sign via
+      `POST /lending-rebalancing/prepare`, then submit the signature via
+      `POST /lending-rebalancing`
+  - name: Stakings
+    x-parent: Earn
+    description: >-
+      Deposit ETH into a staking protocol to generate yield, or unstake
+      it. Compute EIP-712 data to sign via
+      `POST /stakings/{action}/prepare`, then submit the signature via
+      `POST /stakings/{action}`
   - name: Assets management
     description: >-
       Automated strategies that manage a portfolio over time. Compute
       EIP-712 data to sign via `POST /{action}/prepare`, then submit the
       signature via `POST /{action}`
+  - name: Deposit splitting
+    x-parent: Assets management
+    description: >-
+      A Safe wallet that accumulates incoming deposits of a given token
+      and periodically splits the balance across one or more recipients.
+      Compute EIP-712 data to sign via `POST /deposit-splitting/prepare`,
+      then submit the signature via `POST /deposit-splitting`
+  - name: Portfolio rebalancing
+    x-parent: Assets management
+    description: >-
+      Rebalance a portfolio to target token allocations, either once or as
+      a recurring strategy. Compute EIP-712 data to sign via
+      `POST /portfolio-rebalancing/prepare`, then submit the signature via
+      `POST /portfolio-rebalancing`
+  - name: Stablecoin consolidation
+    x-parent: Assets management
+    description: >-
+      Swap all tokens above a given USD threshold into a stablecoin, each
+      swap in a separate transaction. Compute EIP-712 data to sign via
+      `POST /stablecoin-consolidation/prepare`, then submit the signature
+      via `POST /stablecoin-consolidation`
 paths:
   /chains:
     get:
@@ -773,7 +848,7 @@ paths:
   /swaps:
     post:
       tags:
-        - Swap
+        - Swaps
       description: >-
         Submit the signature of the data obtained from `POST /swaps/prepare`,
         along with any required approvals, to execute the single-chain
@@ -797,7 +872,7 @@ paths:
   /swaps/prepare:
     post:
       tags:
-        - Swap
+        - Swaps
       description: >-
         Computes EIP-712 data to be signed to create a single-chain swap
         operation. Submit the resulting signature, along with a signature
@@ -877,7 +952,7 @@ paths:
   /swaps/{id}:
     get:
       tags:
-        - Swap
+        - Swaps
       description: Get the status of a swap execution
       parameters:
         - $ref: '#/components/parameters/ActionId'
@@ -1057,7 +1132,7 @@ paths:
   /lendings/deposit:
     post:
       tags:
-        - Earn
+        - Lendings
       description: >-
         Submit the signature of the data obtained from `POST /lendings/deposit/prepare`,
         along with any required approvals, to deposit a token into a
@@ -1081,7 +1156,7 @@ paths:
   /lendings/deposit/prepare:
     post:
       tags:
-        - Earn
+        - Lendings
       description: >-
         Computes EIP-712 data to be signed to deposit a token into a
         lending protocol to generate yield. Submit the resulting
@@ -1162,7 +1237,7 @@ paths:
   /lendings/withdraw:
     post:
       tags:
-        - Earn
+        - Lendings
       description: >-
         Submit the signature of the data obtained from
         `POST /lendings/withdraw/prepare`, along with any required approvals, to
@@ -1185,7 +1260,7 @@ paths:
   /lendings/withdraw/prepare:
     post:
       tags:
-        - Earn
+        - Lendings
       description: >-
         Computes EIP-712 data to be signed to withdraw a token from a lending protocol. Submit the resulting
         signature, along with a signature for each entry in
@@ -1287,7 +1362,7 @@ paths:
   /lendings/{id}:
     get:
       tags:
-        - Earn
+        - Lendings
       description: >-
         Get the status of a lending deposit or withdrawal execution
       parameters:
@@ -1320,7 +1395,7 @@ paths:
   /lending-rebalancing:
     post:
       tags:
-        - Earn
+        - Lending rebalancing
       description: >-
         Submit the signature of the data obtained from
         `POST /lending-rebalancing/prepare` to create the lending
@@ -1346,7 +1421,7 @@ paths:
   /lending-rebalancing/prepare:
     post:
       tags:
-        - Earn
+        - Lending rebalancing
       description: >-
         Computes EIP-712 data to be signed to move a deposit to the
         highest-yielding of the selected lending protocols, either once or as
@@ -1448,7 +1523,7 @@ paths:
   /lending-rebalancing/{id}:
     get:
       tags:
-        - Earn
+        - Lending rebalancing
       description: >-
         Get the status of the lending rebalancing strategy
       parameters:
@@ -1494,7 +1569,7 @@ paths:
   /lending-rebalancing/{id}/stop/execute:
     post:
       tags:
-        - Earn
+        - Lending rebalancing
       description: >-
         Submit the signature of the data obtained from `POST /lending-
         rebalancing/{id}/stop/prepare` to stop the lending rebalancing
@@ -1520,7 +1595,7 @@ paths:
   /lending-rebalancing/{id}/stop/prepare:
     post:
       tags:
-        - Earn
+        - Lending rebalancing
       description: >-
         Computes EIP-712 data to be signed to stop the lending rebalancing
         strategy. Submit the resulting signature via `POST /lending-
@@ -1540,7 +1615,7 @@ paths:
   /lending-rebalancing/{id}/withdraw:
     post:
       tags:
-        - Earn
+        - Lending rebalancing
       description: >-
         Submit the signature of the data obtained from
         `POST /lending-rebalancing/{id}/withdraw/prepare`, along with any
@@ -1567,7 +1642,7 @@ paths:
   /lending-rebalancing/{id}/withdraw/prepare:
     post:
       tags:
-        - Earn
+        - Lending rebalancing
       description: >-
         Computes EIP-712 data to be signed to withdraw from the position
         managed by the lending rebalancing strategy. The chain, token,
@@ -1655,7 +1730,7 @@ paths:
   /stakings/stake:
     post:
       tags:
-        - Earn
+        - Stakings
       description: >-
         Submit the signature of the data obtained from `POST /stakings/stake/prepare`,
         along with any required approvals, to deposit ETH into a staking
@@ -1679,7 +1754,7 @@ paths:
   /stakings/stake/prepare:
     post:
       tags:
-        - Earn
+        - Stakings
       description: >-
         Computes EIP-712 data to be signed to deposit ETH into a staking
         protocol to generate yield. Submit the resulting signature, along
@@ -1761,7 +1836,7 @@ paths:
   /stakings/unstake:
     post:
       tags:
-        - Earn
+        - Stakings
       description: >-
         Submit the signature of the data obtained from
         `POST /stakings/unstake/prepare`, along with any required approvals, to
@@ -1784,7 +1859,7 @@ paths:
   /stakings/unstake/prepare:
     post:
       tags:
-        - Earn
+        - Stakings
       description: >-
         Computes EIP-712 data to be signed to unstake ETH from a staking protocol. Submit the resulting
         signature, along with a signature for each entry in
@@ -1887,7 +1962,7 @@ paths:
   /stakings/{id}:
     get:
       tags:
-        - Earn
+        - Stakings
       description: >-
         Get the status of a stake or unstake execution
       parameters:
@@ -1920,7 +1995,7 @@ paths:
   /deposit-splitting:
     post:
       tags:
-        - Assets management
+        - Deposit splitting
       description: >-
         Submit the signature of the data obtained from
         `POST /deposit-splitting/prepare` to create the deposit splitting
@@ -1946,7 +2021,7 @@ paths:
   /deposit-splitting/prepare:
     post:
       tags:
-        - Assets management
+        - Deposit splitting
       description: >-
         Computes EIP-712 data to be signed to create a deposit splitting
         strategy: a Safe wallet that accumulates incoming deposits of a
@@ -2052,7 +2127,7 @@ paths:
   /deposit-splitting/{id}:
     get:
       tags:
-        - Assets management
+        - Deposit splitting
       description: >-
         Get the status of the deposit splitting strategy
       parameters:
@@ -2108,7 +2183,7 @@ paths:
   /deposit-splitting/{id}/stop/execute:
     post:
       tags:
-        - Assets management
+        - Deposit splitting
       description: >-
         Submit the signature of the data obtained from `POST /deposit-
         splitting/{id}/stop/prepare` to stop the deposit splitting strategy.
@@ -2134,7 +2209,7 @@ paths:
   /deposit-splitting/{id}/stop/prepare:
     post:
       tags:
-        - Assets management
+        - Deposit splitting
       description: >-
         Computes EIP-712 data to be signed to stop the deposit splitting
         strategy. Submit the resulting signature via `POST /deposit-
@@ -2154,7 +2229,7 @@ paths:
   /dca:
     get:
       tags:
-        - Swap
+        - DCA
       description: >-
         List the DCA strategies created under the caller's account,
         optionally filtered by wallet. Read a single strategy via
@@ -2190,7 +2265,7 @@ paths:
   /dca/prepare:
     post:
       tags:
-        - Swap
+        - DCA
       description: >-
         Computes EIP-712 data to be signed to create a recurring DCA
         (dollar-cost averaging) strategy. Submit the resulting signature,
@@ -2281,7 +2356,7 @@ paths:
   /dca/{id}:
     get:
       tags:
-        - Swap
+        - DCA
       description: Get the status of the DCA strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
@@ -2329,7 +2404,7 @@ paths:
   /dca/{id}/execute:
     post:
       tags:
-        - Swap
+        - DCA
       description: >-
         Submit the signature of the data obtained from `POST /dca/prepare`,
         along with a signature for each `requiredApprovals` entry it
@@ -2363,7 +2438,7 @@ paths:
   /dca/{id}/executions:
     get:
       tags:
-        - Swap
+        - DCA
       description: Get the most recent executions of the DCA strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
@@ -2392,7 +2467,7 @@ paths:
   /dca/{id}/stop/execute:
     post:
       tags:
-        - Swap
+        - DCA
       description: >-
         Submit the signature of the data obtained from `POST
         /dca/{id}/stop/prepare` to stop the DCA strategy, optionally along
@@ -2420,7 +2495,7 @@ paths:
   /dca/{id}/stop/prepare:
     post:
       tags:
-        - Swap
+        - DCA
       description: >-
         Computes EIP-712 data to be signed to stop the DCA strategy, along
         with the transactions that remove the settler's allowance. Submit the
@@ -2445,7 +2520,7 @@ paths:
   /stop-loss:
     post:
       tags:
-        - Swap
+        - Stop loss
       description: >-
         Submit the signature of the data obtained from
         `POST /stop-loss/prepare` to create the stop-loss strategy that
@@ -2470,7 +2545,7 @@ paths:
   /stop-loss/prepare:
     post:
       tags:
-        - Swap
+        - Stop loss
       description: >-
         Computes EIP-712 data to be signed to create a stop-loss strategy
         that monitors a token's exchange rate and swaps it once it falls
@@ -2553,7 +2628,7 @@ paths:
   /stop-loss/{id}:
     get:
       tags:
-        - Swap
+        - Stop loss
       description: Get the status of the stop-loss strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
@@ -2590,7 +2665,7 @@ paths:
   /stop-loss/{id}/stop/execute:
     post:
       tags:
-        - Swap
+        - Stop loss
       description: >-
         Submit the signature of the data obtained from `POST /stop-
         loss/{id}/stop/prepare` to stop the stop-loss strategy. Once stopped,
@@ -2615,7 +2690,7 @@ paths:
   /stop-loss/{id}/stop/prepare:
     post:
       tags:
-        - Swap
+        - Stop loss
       description: >-
         Computes EIP-712 data to be signed to stop the stop-loss strategy.
         Submit the resulting signature via `POST /stop-loss/{id}/stop/execute`.
@@ -2634,7 +2709,7 @@ paths:
   /take-profit:
     post:
       tags:
-        - Swap
+        - Take profit
       description: >-
         Submit the signature of the data obtained from
         `POST /take-profit/prepare` to create the take-profit strategy that
@@ -2659,7 +2734,7 @@ paths:
   /take-profit/prepare:
     post:
       tags:
-        - Swap
+        - Take profit
       description: >-
         Computes EIP-712 data to be signed to create a take-profit strategy
         that monitors a token's exchange rate and swaps it once it rises
@@ -2742,7 +2817,7 @@ paths:
   /take-profit/{id}:
     get:
       tags:
-        - Swap
+        - Take profit
       description: Get the status of the take-profit strategy
       parameters:
         - $ref: '#/components/parameters/ActionId'
@@ -2779,7 +2854,7 @@ paths:
   /take-profit/{id}/stop/execute:
     post:
       tags:
-        - Swap
+        - Take profit
       description: >-
         Submit the signature of the data obtained from `POST /take-
         profit/{id}/stop/prepare` to stop the take-profit strategy. Once
@@ -2804,7 +2879,7 @@ paths:
   /take-profit/{id}/stop/prepare:
     post:
       tags:
-        - Swap
+        - Take profit
       description: >-
         Computes EIP-712 data to be signed to stop the take-profit strategy.
         Submit the resulting signature via `POST /take-profit/{id}/stop/execute`.
@@ -2823,7 +2898,7 @@ paths:
   /limit-order:
     post:
       tags:
-        - Swap
+        - Limit order
       description: >-
         Submit the signature of the data obtained from
         `POST /limit-order/prepare` to create the limit order that swaps a
@@ -2848,7 +2923,7 @@ paths:
   /limit-order/prepare:
     post:
       tags:
-        - Swap
+        - Limit order
       description: >-
         Computes EIP-712 data to be signed to create a limit order that
         swaps a fixed amount of tokenIn for tokenOut once the market rate
@@ -2929,7 +3004,7 @@ paths:
   /limit-order/{id}:
     get:
       tags:
-        - Swap
+        - Limit order
       description: Get the status of the limit order
       parameters:
         - $ref: '#/components/parameters/ActionId'
@@ -2966,7 +3041,7 @@ paths:
   /limit-order/{id}/stop/execute:
     post:
       tags:
-        - Swap
+        - Limit order
       description: >-
         Submit the signature of the data obtained from `POST /limit-
         order/{id}/stop/prepare` to stop the limit order. Once stopped, `GET
@@ -2991,7 +3066,7 @@ paths:
   /limit-order/{id}/stop/prepare:
     post:
       tags:
-        - Swap
+        - Limit order
       description: >-
         Computes EIP-712 data to be signed to stop the limit order. Submit the
         resulting signature via `POST /limit-order/{id}/stop/execute`.
@@ -3010,7 +3085,7 @@ paths:
   /portfolio-rebalancing:
     post:
       tags:
-        - Assets management
+        - Portfolio rebalancing
       description: >-
         Submit the signature of the data obtained from
         `POST /portfolio-rebalancing/prepare` to create the portfolio
@@ -3035,7 +3110,7 @@ paths:
   /portfolio-rebalancing/prepare:
     post:
       tags:
-        - Assets management
+        - Portfolio rebalancing
       description: >-
         Computes EIP-712 data to be signed to rebalance a portfolio to target
         token allocations, either once or as a recurring strategy. Submit
@@ -3131,7 +3206,7 @@ paths:
   /portfolio-rebalancing/{id}:
     get:
       tags:
-        - Assets management
+        - Portfolio rebalancing
       description: >-
         Get the status of the portfolio rebalancing strategy
       parameters:
@@ -3190,7 +3265,7 @@ paths:
   /portfolio-rebalancing/{id}/stop/execute:
     post:
       tags:
-        - Assets management
+        - Portfolio rebalancing
       description: >-
         Submit the signature of the data obtained from `POST /portfolio-
         rebalancing/{id}/stop/prepare` to stop the portfolio rebalancing
@@ -3216,7 +3291,7 @@ paths:
   /portfolio-rebalancing/{id}/stop/prepare:
     post:
       tags:
-        - Assets management
+        - Portfolio rebalancing
       description: >-
         Computes EIP-712 data to be signed to stop the portfolio rebalancing
         strategy. Submit the resulting signature via `POST /portfolio-
@@ -3236,7 +3311,7 @@ paths:
   /stablecoin-consolidation:
     post:
       tags:
-        - Assets management
+        - Stablecoin consolidation
       description: >-
         Submit the signature of the data obtained from
         `POST /stablecoin-consolidation/prepare` to create the stablecoin
@@ -3261,7 +3336,7 @@ paths:
   /stablecoin-consolidation/prepare:
     post:
       tags:
-        - Assets management
+        - Stablecoin consolidation
       description: >-
         Computes EIP-712 data to be signed to swap all tokens above a given
         USD threshold into a stablecoin, each swap in a separate transaction.
@@ -3341,7 +3416,7 @@ paths:
   /stablecoin-consolidation/{id}:
     get:
       tags:
-        - Assets management
+        - Stablecoin consolidation
       description: >-
         Get the status of the stablecoin consolidation strategy
       parameters:
@@ -3364,7 +3439,7 @@ paths:
   /stablecoin-consolidation/{id}/stop/execute:
     post:
       tags:
-        - Assets management
+        - Stablecoin consolidation
       description: >-
         Submit the signature of the data obtained from `POST /stablecoin-
         consolidation/{id}/stop/prepare` to stop the stablecoin consolidation
@@ -3390,7 +3465,7 @@ paths:
   /stablecoin-consolidation/{id}/stop/prepare:
     post:
       tags:
-        - Assets management
+        - Stablecoin consolidation
       description: >-
         Computes EIP-712 data to be signed to stop the stablecoin
         consolidation strategy. Submit the resulting signature via `POST
