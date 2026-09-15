@@ -2,10 +2,29 @@ $schema: https://api.gitbook.com/gitbook-docs.yaml
 site:
   title: Mimic API Docs
   structure:
-    - type: space
-      key: space-1
-      title: API Reference
-      path: api-reference
+    - type: section
+      key: section-1
+      title: Mimic API Docs
+      path: mimic-api-docs
       default: true
-      content:
-        directory: ./api-reference
+      children:
+        - type: space
+          key: space-1
+          title: API Reference
+          path: api-reference
+          default: true
+          content:
+            directory: ./api-reference
+    - type: section
+      key: section-2
+      title: Guides
+      path: guides
+      icon: book-open
+      children:
+        - type: space
+          key: space-2
+          title: Guides
+          path: guides
+          default: true
+          content:
+            directory: ./guides
