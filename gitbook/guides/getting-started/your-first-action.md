@@ -97,4 +97,4 @@ Poll `GET /transfers/{id}` for the outcome — it reports `status` and, once set
 
 That is the whole model, and it does not change. Swaps, bridges and contract calls differ only in their prepare body; even creating a Safe wallet follows the same three steps.
 
-For recurring behaviour, continue to [DCA](../integrations/dca.md), which adds a strategy lifecycle on top of this same flow.
+For recurring behavior, continue to [DCA](../integrations/dca.md), which adds a strategy lifecycle on top of this same flow.

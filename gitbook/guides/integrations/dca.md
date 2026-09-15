@@ -9,13 +9,11 @@ A DCA strategy swaps a fixed amount of one token for another on a recurring sche
 
 This guide assumes you know the [signed-intent flow](../getting-started/signed-intents.md). DCA follows it, with a strategy lifecycle on top:
 
-| Step | Endpoint |
-|---|---|
-| 1 | `POST /dca/prepare` — returns the strategy `id` and the payload to sign |
-| 2 | Sign the payload |
-| 3 | `POST /dca/{id}/execute` — activates the strategy |
-| 4 | `GET /dca`, `GET /dca/{id}`, `GET /dca/{id}/executions` — monitor |
-| 5 | `POST /dca/{id}/stop/prepare` + `/stop/execute` — stop it |
+1. `POST /dca/prepare` — returns the strategy `id` and the payload to sign
+2. Sign the payload
+3. `POST /dca/{id}/execute` — activates the strategy
+4. `GET /dca`, `GET /dca/{id}`, `GET /dca/{id}/executions` — monitor it
+5. `POST /dca/{id}/stop/prepare` + `/stop/execute` — stop it
 
 ## Creating a strategy
 

@@ -1,19 +1,11 @@
 ---
-description: Cron schedules, trigger types, and signing deadlines.
+description: Cron schedules and signing deadlines.
 icon: clock
 ---
 
 # Scheduling
 
-Strategies execute when a trigger fires. Three trigger types exist:
-
-| Type | Fires |
-|---|---|
-| Cron | On a recurring schedule |
-| Event | On an on-chain event |
-| Once | Exactly once, at a specific time |
-
-Most strategies you configure directly — DCA, rebalancing, deposit splitting — use a cron schedule.
+Strategies execute on a recurring schedule that you define when you create them.
 
 ## Cron expressions
 
