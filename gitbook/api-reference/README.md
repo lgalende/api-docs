@@ -1,11 +1,9 @@
 ---
-description: Every Mimic API endpoint, with live request examples.
+description: Every Mimic API endpoint.
 icon: code
 ---
 
 # API Reference
-
-Every endpoint in the Mimic API.
 
 ## How the endpoints are organized
 
