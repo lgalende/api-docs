@@ -22,7 +22,8 @@ Content-Type: application/json
 }
 ```
 
-Then submit the signature to `POST /wallets/safe`.
+Then submit the signature to `POST /wallets/safe/{id}/execute`, using the `id` that
+`prepare` returned. Track the deployment via `GET /wallets/safe/{id}`.
 
 Two optional fields are worth knowing:
 
@@ -39,7 +40,10 @@ Content-Type: application/json
 { "chain": "ethereum" }
 ```
 
-Mimic generates and stores the keypair. There is no prepare step and nothing to sign, because there is no existing owner to authorize it.
+Mimic generates and stores the keypair. This is the one endpoint that does not follow
+the signed-intent flow — there is no prepare step and nothing to sign, because there is
+no existing owner to authorize it. It takes an `Idempotency-Key` header instead, so a
+retried request cannot create a second wallet.
 
 {% hint style="warning" %}
 A custodial EOA means Mimic holds the key. That is a different trust model from the rest of the API — choose it deliberately.

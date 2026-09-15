@@ -21,9 +21,9 @@ Nothing moves unless the wallet owner has signed an explicit authorization. The 
 
 ## Two kinds of action
 
-The distinction shapes every integration:
+Every action is created the same way. What differs is what happens afterwards:
 
-* **One-shot actions** — a transfer, a swap, a bridge, a contract call. Prepared, signed, executed once.
+* **One-time actions** — a transfer, a swap, a bridge, a contract call. Prepared, signed, executed once.
 * **Strategies** — DCA, stop-loss, take-profit, rebalancing. Prepared and signed once, then executed repeatedly by Mimic on a schedule or trigger until they end or you stop them.
 
-Both use the same signing flow. Strategies add a lifecycle on top: a status, an execution history, and a stop procedure.
+The creation flow is identical for both. Strategies add a lifecycle on top: a list endpoint, an execution history, and a stop procedure.

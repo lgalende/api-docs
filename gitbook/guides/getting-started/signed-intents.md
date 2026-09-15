@@ -5,63 +5,47 @@ icon: signature
 
 # Signed intents
 
-Every action in the Mimic API follows one pattern. Learn it once and every endpoint becomes predictable.
+Every action in the Mimic API follows one pattern — a transfer, a swap, a DCA strategy, even creating a Safe wallet. Learn it once and every endpoint becomes predictable.
 
 ```
   prepare  ──►  sign  ──►  execute
 ```
 
-1. **Prepare.** You call `POST /{action}/prepare` with what you want to happen. The API returns EIP-712 typed data describing exactly that, plus any approvals it needs.
+1. **Prepare.** You call `POST /{action}/prepare` with what you want to happen. The API registers the action, returns its `id`, and gives you EIP-712 typed data describing exactly what will be done.
 2. **Sign.** The wallet owner signs it with their own key. This is off-chain: no gas, no funds moved.
-3. **Execute.** You submit the signature back. Mimic executes within the limits that were signed.
+3. **Execute.** You submit the signature to `POST /{action}/{id}/execute`. Mimic executes within the limits that were signed.
 
 The signature is the authorization. Mimic cannot act outside what it describes, which is what makes the API non-custodial — you never hold your users' keys, and neither does Mimic.
 
-## Two shapes
-
-Where the signature is submitted depends on whether the action runs once or repeatedly.
-
-{% tabs %}
-{% tab title="One-shot actions" %}
-Transfers, swaps, bridges, contract calls, lending deposits and withdrawals.
+## The shape is the same everywhere
 
 ```
-POST /transfers/prepare   ──►  signaturePayload, requiredApprovals
-POST /transfers           ──►  id
-GET  /transfers/{id}      ──►  status
+POST /{action}/prepare        ──►  id, signBefore, signaturePayload,
+                                   executionCost, requiredApprovals, policies
+POST /{action}/{id}/execute   ──►  204 No Content
+GET  /{action}/{id}           ──►  status
 ```
 
-`prepare` returns the payload directly. You submit to the bare action endpoint and get an `id` back to track it.
-{% endtab %}
-
-{% tab title="Strategies" %}
-DCA, stop-loss, take-profit, limit orders, rebalancing, deposit splitting.
-
-```
-POST /dca/prepare         ──►  id, signBefore, signaturePayload,
-                               requiredApprovals, policies
-POST /dca/{id}/execute    ──►  204
-GET  /dca/{id}            ──►  status, portfolio
-POST /dca/{id}/stop/...   ──►  deactivation
-```
-
-`prepare` registers the strategy up front and returns its `id`, so the execute call is addressed to that id. Strategies also carry a lifecycle: a status, an execution history, and a stop procedure.
-{% endtab %}
-{% endtabs %}
+The `id` is minted by `prepare`, not by the submission — so you can record it before the user has signed anything, and the execute call is always addressed to it.
 
 ## What comes back from prepare
 
-Beyond `signaturePayload`, a prepare response can include work you must do alongside the signature:
+Every prepare response carries the same six fields:
 
 | Field | Meaning |
 |---|---|
-| `requiredApprovals` | Raw `approve()` transactions letting the settler spend the token. Sign each as a raw transaction. Empty when the allowance already exists |
-| `policies` | EIP-712 safeguards restricting what Mimic may do with the wallet. **Required** when present |
-| `signBefore` | Deadline for submitting. Strategies only |
+| `id` | Identifies the action from here on. Used by `/execute` and every read endpoint |
+| `signBefore` | Deadline for submitting the signature. Past it the payload is refused |
+| `signaturePayload` | The EIP-712 typed data to sign |
+| `executionCost` | Estimated fee per execution, and the ceiling above which an execution is skipped |
+| `requiredApprovals` | Raw `approve()` transactions letting the settler spend the token. Empty when the allowance already exists |
+| `policies` | EIP-712 safeguards restricting what Mimic may do with the wallet. **Required when not empty** |
 
-See [Approvals and safeguards](../concepts/approvals-and-safeguards.md) for what these actually authorize on chain.
+See [Approvals and safeguards](../concepts/approvals-and-safeguards.md) for what the last two actually authorize on chain.
 
 ## Signing
+
+The main payload is typed data:
 
 ```javascript
 const { domain, types, values } = res.signaturePayload;
@@ -84,10 +68,50 @@ const signedPolicies = await Promise.all(
 );
 ```
 
+All three go in the same submission:
+
+```json
+{
+  "signature": { "typedData": { "...": "..." }, "sig": "0x...", "signer": "0x1234..." },
+  "signedApprovals": ["0x02f86c01..."],
+  "signedPolicies": ["0x..."]
+}
+```
+
 {% hint style="warning" %}
-Prepare responses are not indefinitely valid. Strategies return an explicit `signBefore` timestamp; submit after it and the strategy is marked `stale` and can never execute. Call `prepare` again for a fresh payload.
+Prepare responses expire. Submit after `signBefore` and the payload is refused — for a strategy, its status becomes `stale` and it can never execute. Call `prepare` again for a fresh payload rather than holding one while a user decides.
 {% endhint %}
+
+## What differs: the lifecycle, not the flow
+
+Creation is identical everywhere. What changes is how much happens afterwards.
+
+{% tabs %}
+{% tab title="One-time actions" %}
+Transfers, swaps, bridges, contract calls, lending deposits and withdrawals, staking, Safe wallet creation.
+
+They execute once. `GET /{action}/{id}` reports the outcome — status, transaction hash, and whatever that action produces, like `amountOut` for a swap.
+
+There is nothing to stop and no history to read: the action is its own single execution.
+{% endtab %}
+
+{% tab title="Strategies" %}
+DCA, stop-loss, take-profit, limit orders, lending rebalancing, deposit splitting, portfolio rebalancing, stablecoin consolidation.
+
+They keep executing on a schedule or trigger, so they carry a lifecycle on top:
+
+```
+GET  /{action}                     ──►  list your strategies
+GET  /{action}/{id}                ──►  status, portfolio, nextExecution
+GET  /{action}/{id}/executions     ──►  execution history
+POST /{action}/{id}/stop/prepare   ──►  deactivation payload + revocations
+POST /{action}/{id}/stop/execute   ──►  outcome of each revocation
+```
+
+Stopping mirrors creation exactly: prepare, sign, submit.
+{% endtab %}
+{% endtabs %}
 
 ## Retries
 
-Submitting the same signature twice is safe and returns the same success. Submitting a *different* signature for the same `id` returns `409` — Mimic will not silently replace an authorization your user already gave.
+Submitting the same signature twice is safe and returns `204` again. Submitting a *different* signature for the same `id` returns `409` — Mimic will not silently replace an authorization your user already gave.

@@ -13,7 +13,7 @@ This section is generated directly from the Mimic OpenAPI specification, so it n
 
 ## How the endpoints are organised
 
-Most actions come in pairs. `POST /{action}/prepare` computes the EIP-712 data to sign; `POST /{action}` submits the signature. Recurring strategies differ slightly — `prepare` returns an `id` and the signature goes to `POST /{action}/{id}/execute`.
+Every action follows the same two calls. `POST /{action}/prepare` registers the action, returns its `id` and computes the EIP-712 data to sign; `POST /{action}/{id}/execute` submits the signature. Recurring strategies add a lifecycle on top — a list endpoint, an execution history, and a stop procedure — but create exactly the same way.
 
 If you are integrating for the first time, start with [Signed intents](https://app.gitbook.com/s/FKuIxMBkxkTJ5CQ0KNYc/getting-started/signed-intents) in the Guides section rather than reading endpoint-by-endpoint.
 

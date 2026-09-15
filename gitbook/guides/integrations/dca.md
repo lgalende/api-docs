@@ -70,7 +70,7 @@ Content-Type: application/json
 }
 ```
 
-`executionCost` is specific to DCA's recurring nature: `maxUsdPerExecution` is a ceiling derived from the estimate, and any execution whose fee would exceed it is skipped. That protects a long-running strategy from gas spikes.
+`executionCost` comes back from every action, but it earns its keep here: `maxUsdPerExecution` is a ceiling derived from the estimate, and any execution whose fee would exceed it is skipped. Over a long-running schedule that is what protects the strategy from gas spikes.
 
 All subsequent calls use the returned `id`, and the payload must be signed before `signBefore`.
 {% endstep %}
