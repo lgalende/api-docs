@@ -5,7 +5,7 @@ site:
     - type: section
       key: section-1
       title: API Reference
-      path: mimic-api-docs
+      path: api-reference
       description: Every endpoint, generated from the OpenAPI spec.
       icon: code
       default: true
