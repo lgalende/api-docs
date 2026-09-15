@@ -35,10 +35,6 @@ This guide assumes you know the [signed-intent flow](../getting-started/signed-i
 | `maxTotalAmount` | no | Cap on cumulative `tokenIn` spend. The strategy `ended`s after the last execution that fits. Omit for no limit |
 | `recipient` | no | Address receiving `tokenOut`. Defaults to `wallet` |
 
-{% hint style="info" %}
-While the safeguard set by `policies` allows the wallet as the only swap recipient, `recipient` must equal `wallet`. See [Approvals and safeguards](../concepts/approvals-and-safeguards.md).
-{% endhint %}
-
 Swap 100 USDC into WETH daily at midnight UTC, up to 1,200 USDC total:
 
 ```http

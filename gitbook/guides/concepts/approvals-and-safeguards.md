@@ -49,8 +49,6 @@ When `policies` is non-empty you **must** submit `signedPolicies`. Without them 
 
 `policies` is empty when the wallet is already safeguarded, so this is typically a one-time cost per wallet.
 
-One consequence worth designing around: while the safeguard allows only the wallet as swap recipient, a strategy's `recipient` must equal its `wallet`.
-
 ## Revocations — taking permission back
 
 Stopping a strategy returns `revocations`: raw `approve()` transactions setting the allowance back to zero, so no spending permission is left behind.

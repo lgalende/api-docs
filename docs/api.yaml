@@ -7,7 +7,7 @@ info:
     automated portfolio strategies such as DCA, stop-loss/take-profit,
     and rebalancing. Most actions follow a two-step flow: compute EIP-712
     data to sign via `POST /{action}/prepare`, then submit the signature via
-    `POST /{action}` to execute it.
+    `POST /{action}/{id}/execute` to execute it.
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -26,28 +26,28 @@ tags:
     description: >-
       Create and manage wallets. For Safe wallets, compute EIP-712 data to
       sign via `POST /wallets/safe/prepare`, then submit the signature via
-      `POST /wallets/safe`. For custodial EOA wallets, create directly via
-      `POST /wallets/eoa`.
+      `POST /wallets/safe/{id}/execute`. For custodial EOA wallets, create
+      directly via `POST /wallets/eoa`.
   - name: Transfers
     description: >-
       Send tokens to a recipient. Compute EIP-712 data to sign via
-      `POST /transfers/prepare`, then submit the signature via `POST /transfers`.
+      `POST /transfers/prepare`, then submit the signature via `POST /transfers/{id}/execute`.
   - name: Contract calls
     description: >-
       Execute arbitrary contract calls from a wallet. Compute EIP-712 data
       to sign via `POST /calls/prepare`, then submit the signature via
-      `POST /calls`. EOAs are not supported (unless they use proper EIP-7702 delegation).
+      `POST /calls/{id}/execute`. EOAs are not supported (unless they use proper EIP-7702 delegation).
   - name: Swap
     description: >-
       Single-chain and recurring swap-based actions. Compute EIP-712 data
       to sign via `POST /{action}/prepare`, then submit the signature via
-      `POST /{action}`.
+      `POST /{action}/{id}/execute`.
   - name: Swaps
     x-parent: Swap
     description: >-
       Swap one token for another on a single chain. Compute EIP-712 data
       to sign via `POST /swaps/prepare`, then submit the signature via
-      `POST /swaps`.
+      `POST /swaps/{id}/execute`.
   - name: DCA
     x-parent: Swap
     description: >-
@@ -60,37 +60,37 @@ tags:
       Monitor a token's exchange rate and swap it once it falls to or
       below a threshold. Compute EIP-712 data to sign via
       `POST /stop-loss/prepare`, then submit the signature via
-      `POST /stop-loss`.
+      `POST /stop-loss/{id}/execute`.
   - name: Take profit
     x-parent: Swap
     description: >-
       Monitor a token's exchange rate and swap it once it rises to or
       above a threshold. Compute EIP-712 data to sign via
       `POST /take-profit/prepare`, then submit the signature via
-      `POST /take-profit`.
+      `POST /take-profit/{id}/execute`.
   - name: Limit order
     x-parent: Swap
     description: >-
       Swap a fixed amount of `tokenIn` for `tokenOut` once the market rate
       reaches or exceeds the requested `limitRate`. Compute EIP-712 data
       to sign via `POST /limit-order/prepare`, then submit the signature
-      via `POST /limit-order`.
+      via `POST /limit-order/{id}/execute`.
   - name: Bridge
     description: >-
       Cross-chain token transfers. Compute EIP-712 data to sign via
-      `POST /bridges/prepare`, then submit the signature via `POST /bridges`.
+      `POST /bridges/prepare`, then submit the signature via `POST /bridges/{id}/execute`.
   - name: Earn
     description: >-
       Lending, staking and yield strategies. Compute EIP-712 data
       to sign via `POST /{action}/prepare`, then submit the signature via
-      `POST /{action}`.
+      `POST /{action}/{id}/execute`.
   - name: Lendings
     x-parent: Earn
     description: >-
       Deposit a token into a lending protocol to generate yield, or
       withdraw it. Compute EIP-712 data to sign via
       `POST /lendings/{action}/prepare`, then submit the signature via
-      `POST /lendings/{action}`.
+      `POST /lendings/{action}/{id}/execute`.
   - name: Lending rebalancing
     x-parent: Earn
     description: >-
@@ -98,40 +98,40 @@ tags:
       protocols, either once or as a recurring strategy that keeps
       monitoring APY. Compute EIP-712 data to sign via
       `POST /lending-rebalancing/prepare`, then submit the signature via
-      `POST /lending-rebalancing`.
+      `POST /lending-rebalancing/{id}/execute`.
   - name: Stakings
     x-parent: Earn
     description: >-
       Deposit ETH into a staking protocol to generate yield, or unstake
       it. Compute EIP-712 data to sign via
       `POST /stakings/{action}/prepare`, then submit the signature via
-      `POST /stakings/{action}`.
+      `POST /stakings/{action}/{id}/execute`.
   - name: Assets management
     description: >-
       Automated strategies that manage a portfolio over time. Compute
       EIP-712 data to sign via `POST /{action}/prepare`, then submit the
-      signature via `POST /{action}`.
+      signature via `POST /{action}/{id}/execute`.
   - name: Deposit splitting
     x-parent: Assets management
     description: >-
       A Safe wallet that accumulates incoming deposits of a given token
       and periodically splits the balance across one or more recipients.
       Compute EIP-712 data to sign via `POST /deposit-splitting/prepare`,
-      then submit the signature via `POST /deposit-splitting`.
+      then submit the signature via `POST /deposit-splitting/{id}/execute`.
   - name: Portfolio rebalancing
     x-parent: Assets management
     description: >-
       Rebalance a portfolio to target token allocations, either once or as
       a recurring strategy. Compute EIP-712 data to sign via
       `POST /portfolio-rebalancing/prepare`, then submit the signature via
-      `POST /portfolio-rebalancing`.
+      `POST /portfolio-rebalancing/{id}/execute`.
   - name: Stablecoin consolidation
     x-parent: Assets management
     description: >-
       Swap all tokens above a given USD threshold into a stablecoin, each
       swap in a separate transaction. Compute EIP-712 data to sign via
       `POST /stablecoin-consolidation/prepare`, then submit the signature
-      via `POST /stablecoin-consolidation`.
+      via `POST /stablecoin-consolidation/{id}/execute`.
 paths:
   /chains:
     get:
@@ -415,20 +415,23 @@ paths:
                           $ref: '#/components/schemas/ExternalId'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /wallets/safe:
+  /wallets/safe/{id}/execute:
     post:
       tags:
         - Wallets management
       description: >-
         Submit the signature of the data obtained from
-        `POST /wallets/safe/prepare` to create the Safe wallet. Track the
-        execution via `GET /wallets/safe/{id}`.
+        `POST /wallets/safe/prepare` to create the Safe wallet. Call this
+        before the `signBefore` deadline returned by
+        `POST /wallets/safe/prepare`. Past it the payload is no longer
+        accepted. Track the execution via `GET /wallets/safe/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /wallets/safe/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -437,7 +440,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /wallets/safe/prepare:
     post:
       tags:
@@ -482,16 +485,7 @@ paths:
                     different `externalId`.
       responses:
         '200':
-          description: EIP-712 data to be signed to create a new Safe wallet.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -503,7 +497,7 @@ paths:
       description: Get the status of a Safe wallet creation execution.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /wallets/safe`.
+          description: ID returned by `POST /wallets/safe/prepare`.
       responses:
         '200':
           description: Status of the wallet creation execution.
@@ -578,22 +572,23 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /transfers:
+  /transfers/{id}/execute:
     post:
       tags:
         - Transfers
       description: >-
-        Submit the signature of the data obtained from
-        `POST /transfers/prepare`, along with any required approvals, to
-        transfer tokens from a wallet to a recipient. Track the execution
-        via
-        `GET /transfers/{id}`.
+        Submit the signature of the data obtained from `POST /transfers/prepare`,
+        along with any required approvals, to transfer tokens from a wallet to a
+        recipient. Call this before the `signBefore` deadline returned by
+        `POST /transfers/prepare`. Past it the payload is no longer accepted.
+        Track the execution via `GET /transfers/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /transfers/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -602,7 +597,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /transfers/prepare:
     post:
       tags:
@@ -611,7 +606,7 @@ paths:
         Computes EIP-712 data to be signed to transfer tokens from a wallet
         to a recipient. Submit the resulting signature, along with a
         signature for each entry in `requiredApprovals` if any are
-        returned, via `POST /transfers`.
+        returned, via `POST /transfers/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -624,7 +619,6 @@ paths:
                 - amount
                 - wallet
                 - recipient
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -646,31 +640,9 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/Address'
                   description: Address that receives the tokens.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the transfer.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                  - requiredApprovals
-                properties:
-                  signaturePayload:
-                    allOf:
-                      - $ref: '#/components/schemas/TriggerSignaturePayload'
-                    description: EIP-712 data to be signed to create the transfer.
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions that must be signed and
-                      submitted alongside the action signature. Empty when
-                      no approvals are required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -682,7 +654,7 @@ paths:
       description: Get the status of a transfer execution.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /transfers`.
+          description: ID returned by `POST /transfers/prepare`.
       responses:
         '200':
           description: Status of the transfer execution.
@@ -705,20 +677,23 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /calls:
+  /calls/{id}/execute:
     post:
       tags:
         - Contract calls
       description: >-
-        Submit the signature of the data obtained from `POST /calls/prepare`
-        to execute one or more arbitrary contract calls from a wallet,
-        atomically. Track the execution via `GET /calls/{id}`.
+        Submit the signature of the data obtained from `POST /calls/prepare` to
+        execute one or more arbitrary contract calls from a wallet, atomically.
+        Call this before the `signBefore` deadline returned by
+        `POST /calls/prepare`. Past it the payload is no longer accepted. Track
+        the execution via `GET /calls/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /calls/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -727,7 +702,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /calls/prepare:
     post:
       tags:
@@ -735,7 +710,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to execute one or more arbitrary
         contract calls from a wallet, atomically. Submit the resulting
-        signature via `POST /calls`.
+        signature via `POST /calls/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -746,7 +721,6 @@ paths:
                 - chain
                 - wallet
                 - calls
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -789,20 +763,9 @@ paths:
                         description: >-
                           Native token value to send with this call, in
                           wei. Defaults to '0'.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to execute the calls.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -814,7 +777,7 @@ paths:
       description: Get the status of contract calls execution.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /calls`.
+          description: ID returned by `POST /calls/prepare`.
       responses:
         '200':
           description: Status of the call execution.
@@ -845,21 +808,23 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /swaps:
+  /swaps/{id}/execute:
     post:
       tags:
         - Swaps
       description: >-
         Submit the signature of the data obtained from `POST /swaps/prepare`,
-        along with any required approvals, to execute the single-chain
-        swap. Track the
-        execution via `GET /swaps/{id}`.
+        along with any required approvals, to execute the single-chain swap. Call
+        this before the `signBefore` deadline returned by `POST /swaps/prepare`.
+        Past it the payload is no longer accepted. Track the execution via
+        `GET /swaps/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /swaps/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -868,7 +833,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /swaps/prepare:
     post:
       tags:
@@ -877,7 +842,7 @@ paths:
         Computes EIP-712 data to be signed to create a single-chain swap
         operation. Submit the resulting signature, along with a signature
         for each entry in `requiredApprovals` if any are returned, via
-        `POST /swaps`.
+        `POST /swaps/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -891,7 +856,6 @@ paths:
                 - tokenOut
                 - wallet
                 - slippageBps
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -920,31 +884,9 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the swap intent.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                  - requiredApprovals
-                properties:
-                  signaturePayload:
-                    allOf:
-                      - $ref: '#/components/schemas/TriggerSignaturePayload'
-                    description: EIP-712 data to be signed to create the swap intent.
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions that must be signed and
-                      submitted alongside the action signature. Empty when
-                      no approvals are required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -956,7 +898,7 @@ paths:
       description: Get the status of a swap execution.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /swaps`.
+          description: ID returned by `POST /swaps/prepare`.
       responses:
         '200':
           description: Status of the swap execution.
@@ -984,20 +926,23 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /bridges:
+  /bridges/{id}/execute:
     post:
       tags:
         - Bridge
       description: >-
         Submit the signature of the data obtained from `POST /bridges/prepare`,
-        along with any required approvals, to move a token from one chain
-        to another. Track the execution via `GET /bridges/{id}`.
+        along with any required approvals, to move a token from one chain to
+        another. Call this before the `signBefore` deadline returned by
+        `POST /bridges/prepare`. Past it the payload is no longer accepted. Track
+        the execution via `GET /bridges/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /bridges/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1006,7 +951,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /bridges/prepare:
     post:
       tags:
@@ -1015,7 +960,7 @@ paths:
         Computes EIP-712 data to be signed to move a token from one chain to
         another. Submit the resulting signature, along with a signature
         for each entry in `requiredApprovals` if any are returned, via
-        `POST /bridges`.
+        `POST /bridges/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -1029,7 +974,6 @@ paths:
                 - amount
                 - wallet
                 - slippageBps
-                - maxFeeUsd
               properties:
                 sourceChain:
                   allOf:
@@ -1058,31 +1002,9 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the token on destinationChain. Defaults to `wallet`.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the bridge intent.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                  - requiredApprovals
-                properties:
-                  signaturePayload:
-                    allOf:
-                      - $ref: '#/components/schemas/TriggerSignaturePayload'
-                    description: EIP-712 data to be signed to create the bridge intent.
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions that must be signed and
-                      submitted alongside the action signature. Empty when
-                      no approvals are required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1094,7 +1016,7 @@ paths:
       description: Get the status of a bridge execution.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /bridges`.
+          description: ID returned by `POST /bridges/prepare`.
       responses:
         '200':
           description: Status of the bridge execution.
@@ -1129,21 +1051,24 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /lendings/deposit:
+  /lendings/deposit/{id}/execute:
     post:
       tags:
         - Lendings
       description: >-
-        Submit the signature of the data obtained from `POST /lendings/deposit/prepare`,
-        along with any required approvals, to deposit a token into a
-        lending protocol to generate yield. Track the execution via
-        `GET /lendings/{id}`.
+        Submit the signature of the data obtained from
+        `POST /lendings/deposit/prepare`, along with any required approvals, to
+        deposit a token into a lending protocol to generate yield. Call this
+        before the `signBefore` deadline returned by
+        `POST /lendings/deposit/prepare`. Past it the payload is no longer
+        accepted. Track the execution via `GET /lendings/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /lendings/deposit/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1152,7 +1077,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /lendings/deposit/prepare:
     post:
       tags:
@@ -1162,7 +1087,7 @@ paths:
         lending protocol to generate yield. Submit the resulting
         signature, along with a signature for each entry in
         `requiredApprovals` if
-        any are returned, via `POST /lendings/deposit`.
+        any are returned, via `POST /lendings/deposit/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -1175,7 +1100,6 @@ paths:
                 - protocol
                 - amount
                 - wallet
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -1205,49 +1129,31 @@ paths:
                   description: >-
                     Address from where the funds will be pulled and that
                     receives the deposit position.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the deposit.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                  - requiredApprovals
-                properties:
-                  signaturePayload:
-                    allOf:
-                      - $ref: '#/components/schemas/TriggerSignaturePayload'
-                    description: EIP-712 data to be signed to create the deposit.
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions that must be signed and
-                      submitted alongside the action signature. Empty when
-                      no approvals are required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /lendings/withdraw:
+  /lendings/withdraw/{id}/execute:
     post:
       tags:
         - Lendings
       description: >-
         Submit the signature of the data obtained from
         `POST /lendings/withdraw/prepare`, along with any required approvals, to
-        withdraw a token from a lending protocol. Track the execution via `GET /lendings/{id}`.
+        withdraw a token from a lending protocol. Call this before the
+        `signBefore` deadline returned by `POST /lendings/withdraw/prepare`. Past
+        it the payload is no longer accepted. Track the execution via
+        `GET /lendings/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /lendings/withdraw/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1256,7 +1162,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /lendings/withdraw/prepare:
     post:
       tags:
@@ -1264,7 +1170,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to withdraw a token from a lending protocol. Submit the resulting
         signature, along with a signature for each entry in
-        `requiredApprovals` if any are returned, via `POST /lendings/withdraw`.
+        `requiredApprovals` if any are returned, via `POST /lendings/withdraw/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -1276,7 +1182,6 @@ paths:
                 - token
                 - protocol
                 - wallet
-                - maxFeeUsd
               oneOf:
                 - title: By token amount
                   required:
@@ -1330,31 +1235,9 @@ paths:
                   description: >-
                     Address that receives the withdrawn token. Defaults to
                     `wallet`.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to withdraw a token from a lending protocol.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                  - requiredApprovals
-                properties:
-                  signaturePayload:
-                    allOf:
-                      - $ref: '#/components/schemas/TriggerSignaturePayload'
-                    description: EIP-712 data to be signed to withdraw a token from a lending protocol.
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions that must be signed and
-                      submitted alongside the action signature. Empty when
-                      no approvals are required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1368,8 +1251,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: >-
-            ID returned by `POST /lendings/deposit` or
-            `POST /lendings/withdraw`.
+            ID returned by `POST /lendings/deposit/prepare` or
+            `POST /lendings/withdraw/prepare`.
       responses:
         '200':
           description: Status of the lending deposit or withdrawal execution.
@@ -1392,23 +1275,25 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /lending-rebalancing:
+  /lending-rebalancing/{id}/execute:
     post:
       tags:
         - Lending rebalancing
       description: >-
         Submit the signature of the data obtained from
-        `POST /lending-rebalancing/prepare` to create the lending
-        rebalancing strategy that moves a deposit to the highest-yielding
-        of the selected lending protocols, either once or as a recurring
-        strategy that keeps monitoring APY. Track the execution via
-        `GET /lending-rebalancing/{id}`.
+        `POST /lending-rebalancing/prepare` to create the lending rebalancing
+        strategy that moves a deposit to the highest-yielding of the selected
+        lending protocols, either once or as a recurring strategy that keeps
+        monitoring APY. Call this before the `signBefore` deadline returned by
+        `POST /lending-rebalancing/prepare`. Past it the payload is no longer
+        accepted. Track the execution via `GET /lending-rebalancing/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /lending-rebalancing/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1417,7 +1302,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /lending-rebalancing/prepare:
     post:
       tags:
@@ -1426,7 +1311,7 @@ paths:
         Computes EIP-712 data to be signed to move a deposit to the
         highest-yielding of the selected lending protocols, either once or as
         a recurring strategy that keeps monitoring APY. Submit the
-        resulting signature via `POST /lending-rebalancing`.
+        resulting signature via `POST /lending-rebalancing/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -1439,7 +1324,6 @@ paths:
                 - protocols
                 - rotationThresholdBps
                 - wallet
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -1500,22 +1384,9 @@ paths:
                   description: >-
                     Timestamp after which the strategy stops executing. Only
                     relevant when `schedule` is set. Omit for no end date.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: >-
-            EIP-712 data to be signed to create the lending rebalancing
-            strategy.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1528,7 +1399,7 @@ paths:
         Get the status of the lending rebalancing strategy.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /lending-rebalancing`.
+          description: ID returned by `POST /lending-rebalancing/prepare`.
       responses:
         '200':
           description: >-
@@ -1571,19 +1442,18 @@ paths:
       tags:
         - Lending rebalancing
       description: >-
-        Submit the signature of the data obtained from `POST /lending-
-        rebalancing/{id}/stop/prepare` to stop the lending rebalancing
-        strategy. Once stopped, `GET /lending-rebalancing/{id}` reports
-        `status` as `stopped`.
+        Submit the signature of the data obtained from
+        `POST /lending-rebalancing/{id}/stop/prepare` to stop the lending
+        rebalancing strategy. Once stopped, `GET /lending-rebalancing/{id}`
+        reports `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /lending-rebalancing`.
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /lending-rebalancing/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/DeactivationSubmission'
+        $ref: '#/components/requestBodies/StopSignatureSubmission'
       responses:
         '200':
-          $ref: '#/components/responses/SignatureSubmitted'
+          $ref: '#/components/responses/StopSignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1591,28 +1461,28 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/NothingToStopConflict'
   /lending-rebalancing/{id}/stop/prepare:
     post:
       tags:
         - Lending rebalancing
       description: >-
         Computes EIP-712 data to be signed to stop the lending rebalancing
-        strategy. Submit the resulting signature via `POST /lending-
-        rebalancing/{id}/stop/execute`.
+        strategy. Submit the resulting signature via
+        `POST /lending-rebalancing/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /lending-rebalancing`.
+          description: ID returned by `POST /lending-rebalancing/prepare`.
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationPrepared'
+          $ref: '#/components/responses/StopPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /lending-rebalancing/{id}/withdraw:
+  /lending-rebalancing/{id}/withdraw/{withdrawId}/execute:
     post:
       tags:
         - Lending rebalancing
@@ -1620,16 +1490,24 @@ paths:
         Submit the signature of the data obtained from
         `POST /lending-rebalancing/{id}/withdraw/prepare`, along with any
         required approvals, to withdraw from the position managed by the
-        lending rebalancing strategy. Withdrawing does not stop the
-        strategy. Call `POST /lending-rebalancing/{id}/stop/execute` to stop it.
+        lending rebalancing strategy. Call this before the `signBefore`
+        deadline returned by that endpoint. Past it the payload is no longer
+        accepted. Withdrawing does not stop the strategy. Call
+        `POST /lending-rebalancing/{id}/stop/execute` to stop it.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /lending-rebalancing`.
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /lending-rebalancing/prepare`.
+        - name: withdrawId
+          in: path
+          required: true
+          description: >-
+            ID returned by `POST /lending-rebalancing/{id}/withdraw/prepare`.
+          schema:
+            $ref: '#/components/schemas/UUID'
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1638,7 +1516,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /lending-rebalancing/{id}/withdraw/prepare:
     post:
       tags:
@@ -1649,10 +1527,10 @@ paths:
         protocol and wallet are taken from the strategy. Submit the
         resulting signature, along with a signature for each entry in
         `requiredApprovals` if any are returned, via
-        `POST /lending-rebalancing/{id}/withdraw`.
+        `POST /lending-rebalancing/{id}/withdraw/{withdrawId}/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /lending-rebalancing`.
+          description: ID returned by `POST /lending-rebalancing/prepare`.
       requestBody:
         required: true
         content:
@@ -1660,7 +1538,6 @@ paths:
             schema:
               type: object
               required:
-                - maxFeeUsd
               oneOf:
                 - title: By token amount
                   required:
@@ -1693,55 +1570,33 @@ paths:
                   description: >-
                     Address that receives the withdrawn token. Defaults to
                     the strategy's `wallet`.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: >-
-            EIP-712 data to be signed to withdraw from the position managed
-            by the lending rebalancing strategy.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                  - requiredApprovals
-                properties:
-                  signaturePayload:
-                    allOf:
-                      - $ref: '#/components/schemas/TriggerSignaturePayload'
-                    description: >-
-                      EIP-712 data to be signed to withdraw from the position.
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions that must be signed and
-                      submitted alongside the action signature. Empty when
-                      no approvals are required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stakings/stake:
+  /stakings/stake/{id}/execute:
     post:
       tags:
         - Stakings
       description: >-
-        Submit the signature of the data obtained from `POST /stakings/stake/prepare`,
-        along with any required approvals, to deposit ETH into a staking
-        protocol to generate yield. Track the execution via
+        Submit the signature of the data obtained from
+        `POST /stakings/stake/prepare`, along with any required approvals, to
+        deposit ETH into a staking protocol to generate yield. Call this before
+        the `signBefore` deadline returned by `POST /stakings/stake/prepare`. Past
+        it the payload is no longer accepted. Track the execution via
         `GET /stakings/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stakings/stake/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1750,7 +1605,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /stakings/stake/prepare:
     post:
       tags:
@@ -1760,7 +1615,7 @@ paths:
         protocol to generate yield. Submit the resulting signature, along
         with a signature for each entry in `requiredApprovals` if any are
         returned, via
-        `POST /stakings/stake`.
+        `POST /stakings/stake/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -1773,7 +1628,6 @@ paths:
                 - protocol
                 - amount
                 - wallet
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -1804,49 +1658,30 @@ paths:
                   description: >-
                     Address from where the funds will be pulled and that
                     receives the staking position.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the deposit.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                  - requiredApprovals
-                properties:
-                  signaturePayload:
-                    allOf:
-                      - $ref: '#/components/schemas/TriggerSignaturePayload'
-                    description: EIP-712 data to be signed to create the deposit.
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions that must be signed and
-                      submitted alongside the action signature. Empty when
-                      no approvals are required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /stakings/unstake:
+  /stakings/unstake/{id}/execute:
     post:
       tags:
         - Stakings
       description: >-
         Submit the signature of the data obtained from
         `POST /stakings/unstake/prepare`, along with any required approvals, to
-        unstake ETH from a staking protocol. Track the execution via `GET /stakings/{id}`.
+        unstake ETH from a staking protocol. Call this before the `signBefore`
+        deadline returned by `POST /stakings/unstake/prepare`. Past it the payload
+        is no longer accepted. Track the execution via `GET /stakings/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stakings/unstake/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -1855,7 +1690,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /stakings/unstake/prepare:
     post:
       tags:
@@ -1863,7 +1698,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to unstake ETH from a staking protocol. Submit the resulting
         signature, along with a signature for each entry in
-        `requiredApprovals` if any are returned, via `POST /stakings/unstake`.
+        `requiredApprovals` if any are returned, via `POST /stakings/unstake/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -1875,7 +1710,6 @@ paths:
                 - token
                 - protocol
                 - wallet
-                - maxFeeUsd
               oneOf:
                 - title: By token amount
                   required:
@@ -1930,31 +1764,9 @@ paths:
                   description: >-
                     Address that receives the withdrawn token. Defaults to
                     `wallet`.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to unstake ETH from a staking protocol.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                  - requiredApprovals
-                properties:
-                  signaturePayload:
-                    allOf:
-                      - $ref: '#/components/schemas/TriggerSignaturePayload'
-                    description: EIP-712 data to be signed to unstake ETH from a staking protocol.
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions that must be signed and
-                      submitted alongside the action signature. Empty when
-                      no approvals are required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1968,8 +1780,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ActionId'
           description: >-
-            ID returned by `POST /stakings/stake` or
-            `POST /stakings/unstake`.
+            ID returned by `POST /stakings/stake/prepare` or
+            `POST /stakings/unstake/prepare`.
       responses:
         '200':
           description: Status of the stake or unstake execution.
@@ -1992,23 +1804,25 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /deposit-splitting:
+  /deposit-splitting/{id}/execute:
     post:
       tags:
         - Deposit splitting
       description: >-
         Submit the signature of the data obtained from
         `POST /deposit-splitting/prepare` to create the deposit splitting
-        strategy: a Safe wallet that accumulates incoming deposits of a
-        given token and periodically splits the balance across one or
-        more recipients. Track the execution via
-        `GET /deposit-splitting/{id}`.
+        strategy: a Safe wallet that accumulates incoming deposits of a given
+        token and periodically splits the balance across one or more recipients.
+        Call this before the `signBefore` deadline returned by
+        `POST /deposit-splitting/prepare`. Past it the payload is no longer
+        accepted. Track the execution via `GET /deposit-splitting/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /deposit-splitting/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -2017,7 +1831,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /deposit-splitting/prepare:
     post:
       tags:
@@ -2027,7 +1841,7 @@ paths:
         strategy: a Safe wallet that accumulates incoming deposits of a
         given token and periodically splits the balance across one or more
         recipients. Submit the resulting signature via
-        `POST /deposit-splitting`.
+        `POST /deposit-splitting/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -2110,16 +1924,7 @@ paths:
                     existing wallet already has a different `externalId`.
       responses:
         '200':
-          description: EIP-712 data to be signed to create the deposit splitting strategy.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2132,7 +1937,7 @@ paths:
         Get the status of the deposit splitting strategy.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /deposit-splitting`.
+          description: ID returned by `POST /deposit-splitting/prepare`.
       responses:
         '200':
           description: Status of the deposit splitting strategy.
@@ -2185,19 +1990,18 @@ paths:
       tags:
         - Deposit splitting
       description: >-
-        Submit the signature of the data obtained from `POST /deposit-
-        splitting/{id}/stop/prepare` to stop the deposit splitting strategy.
-        Once stopped, `GET /deposit-splitting/{id}` reports `status` as
-        `stopped`.
+        Submit the signature of the data obtained from
+        `POST /deposit-splitting/{id}/stop/prepare` to stop the deposit
+        splitting strategy. Once stopped, `GET /deposit-splitting/{id}` reports
+        `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /deposit-splitting`.
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /deposit-splitting/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/DeactivationSubmission'
+        $ref: '#/components/requestBodies/StopSignatureSubmission'
       responses:
         '200':
-          $ref: '#/components/responses/SignatureSubmitted'
+          $ref: '#/components/responses/StopSignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2205,21 +2009,21 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/NothingToStopConflict'
   /deposit-splitting/{id}/stop/prepare:
     post:
       tags:
         - Deposit splitting
       description: >-
-        Computes EIP-712 data to be signed to stop the deposit splitting
-        strategy. Submit the resulting signature via `POST /deposit-
-        splitting/{id}/stop/execute`.
+        Computes EIP-712 data to be signed to stop the deposit splitting strategy.
+        Submit the resulting signature via
+        `POST /deposit-splitting/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /deposit-splitting`.
+          description: ID returned by `POST /deposit-splitting/prepare`.
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationPrepared'
+          $ref: '#/components/responses/StopPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2281,74 +2085,7 @@ paths:
               $ref: '#/components/schemas/DcaInputs'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the DCA strategy.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - id
-                  - signBefore
-                  - signaturePayload
-                  - executionCost
-                  - requiredApprovals
-                  - policies
-                properties:
-                  id:
-                    allOf:
-                      - $ref: '#/components/schemas/UUID'
-                    description: >-
-                      ID for this strategy. Submit the signature via
-                      `POST /dca/{id}/execute` and track its status via
-                      `GET /dca/{id}`.
-                  signBefore:
-                    allOf:
-                      - $ref: '#/components/schemas/Timestamp'
-                    description: >-
-                      Deadline for submitting the signature via `POST /dca/{id}/execute`.
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
-                  executionCost:
-                    type: object
-                    description: Estimated cost per execution for this strategy.
-                    required:
-                      - estimatedUsdPerExecution
-                      - maxUsdPerExecution
-                    properties:
-                      estimatedUsdPerExecution:
-                        type: string
-                        description: >-
-                          Estimated fee for each on-chain transaction, in
-                          USD, as a decimal string.
-                        example: '0.42'
-                      maxUsdPerExecution:
-                        allOf:
-                          - $ref: '#/components/schemas/MaxFeeUsd'
-                        description: >-
-                          The maximum fee applied per execution, derived from
-                          `estimatedUsdPerExecution`. If the fee of a given
-                          execution would exceed this value, that execution
-                          is skipped.
-                        example: '0.6'
-                  requiredApprovals:
-                    type: array
-                    description: >-
-                      Raw `approve()` transactions authorizing the settler to
-                      spend `tokenIn`, which must be signed and submitted
-                      alongside the action signature via
-                      `POST /dca/{id}/execute`. Empty when no approvals are
-                      required.
-                    items:
-                      $ref: '#/components/schemas/TransactionRequest'
-                  policies:
-                    type: array
-                    description: >-
-                      EIP-712 payloads authorizing the safeguards that restrict
-                      what Mimic may do with this wallet. Each must be signed and
-                      submitted as `signedPolicies` via `POST /dca/{id}/execute`.
-                      Empty when the wallet is already safeguarded.
-                    items:
-                      $ref: '#/components/schemas/SafeguardSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2417,12 +2154,10 @@ paths:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /dca/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/SignatureSubmissionWithApprovals'
+        $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
         '204':
-          description: >-
-            Signature submitted. Returned again when the same signature is
-            resubmitted for this `id`, so a retry is always safe.
+          $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2430,11 +2165,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
-          description: >-
-            Conflict — a different signature was already submitted for this
-            `id`, or the signing window closed before this one arrived and
-            the strategy is now `stale`.
+          $ref: '#/components/responses/SignatureConflict'
   /dca/{id}/executions:
     get:
       tags:
@@ -2477,10 +2208,10 @@ paths:
         - $ref: '#/components/parameters/ActionId'
           description: ID returned by `POST /dca/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/DeactivationSubmission'
+        $ref: '#/components/requestBodies/StopSignatureSubmission'
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationSubmitted'
+          $ref: '#/components/responses/StopSignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2488,10 +2219,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
-          description: >-
-            Conflict — the strategy has not been executed yet, so there is
-            nothing to stop.
+          $ref: '#/components/responses/NothingToStopConflict'
   /dca/{id}/stop/prepare:
     post:
       tags:
@@ -2505,7 +2233,7 @@ paths:
           description: ID returned by `POST /dca/prepare`.
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationPrepared'
+          $ref: '#/components/responses/StopPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2513,26 +2241,25 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
-          description: >-
-            Conflict — the strategy has not been executed yet, so there is
-            nothing to stop.
-  /stop-loss:
+          $ref: '#/components/responses/NothingToStopConflict'
+  /stop-loss/{id}/execute:
     post:
       tags:
         - Stop loss
       description: >-
-        Submit the signature of the data obtained from
-        `POST /stop-loss/prepare` to create the stop-loss strategy that
-        monitors a token's exchange rate and swaps it once it falls to or
-        below a threshold. Track the execution via
+        Submit the signature of the data obtained from `POST /stop-loss/prepare`
+        to create the stop-loss strategy that monitors a token's exchange rate and
+        swaps it once it falls to or below a threshold. Call this before the
+        `signBefore` deadline returned by `POST /stop-loss/prepare`. Past it the
+        payload is no longer accepted. Track the execution via
         `GET /stop-loss/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stop-loss/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -2541,7 +2268,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /stop-loss/prepare:
     post:
       tags:
@@ -2550,7 +2277,7 @@ paths:
         Computes EIP-712 data to be signed to create a stop-loss strategy
         that monitors a token's exchange rate and swaps it once it falls
         to or below a threshold. Submit the resulting signature via
-        `POST /stop-loss`.
+        `POST /stop-loss/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -2565,7 +2292,6 @@ paths:
                 - wallet
                 - balanceBps
                 - slippageBps
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -2607,20 +2333,9 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the stop-loss strategy.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2632,7 +2347,7 @@ paths:
       description: Get the status of the stop-loss strategy.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /stop-loss`.
+          description: ID returned by `POST /stop-loss/prepare`.
       responses:
         '200':
           description: Status of the stop-loss strategy.
@@ -2667,18 +2382,17 @@ paths:
       tags:
         - Stop loss
       description: >-
-        Submit the signature of the data obtained from `POST /stop-
-        loss/{id}/stop/prepare` to stop the stop-loss strategy. Once stopped,
-        `GET /stop-loss/{id}` reports `status` as `stopped`.
+        Submit the signature of the data obtained from
+        `POST /stop-loss/{id}/stop/prepare` to stop the stop-loss strategy.
+        Once stopped, `GET /stop-loss/{id}` reports `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /stop-loss`.
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /stop-loss/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/DeactivationSubmission'
+        $ref: '#/components/requestBodies/StopSignatureSubmission'
       responses:
         '200':
-          $ref: '#/components/responses/SignatureSubmitted'
+          $ref: '#/components/responses/StopSignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2686,7 +2400,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/NothingToStopConflict'
   /stop-loss/{id}/stop/prepare:
     post:
       tags:
@@ -2696,32 +2410,34 @@ paths:
         Submit the resulting signature via `POST /stop-loss/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /stop-loss`.
+          description: ID returned by `POST /stop-loss/prepare`.
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationPrepared'
+          $ref: '#/components/responses/StopPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /take-profit:
+  /take-profit/{id}/execute:
     post:
       tags:
         - Take profit
       description: >-
-        Submit the signature of the data obtained from
-        `POST /take-profit/prepare` to create the take-profit strategy that
-        monitors a token's exchange rate and swaps it once it rises to or
-        above a threshold. Track the execution via
+        Submit the signature of the data obtained from `POST /take-profit/prepare`
+        to create the take-profit strategy that monitors a token's exchange rate
+        and swaps it once it rises to or above a threshold. Call this before the
+        `signBefore` deadline returned by `POST /take-profit/prepare`. Past it the
+        payload is no longer accepted. Track the execution via
         `GET /take-profit/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /take-profit/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -2730,7 +2446,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /take-profit/prepare:
     post:
       tags:
@@ -2739,7 +2455,7 @@ paths:
         Computes EIP-712 data to be signed to create a take-profit strategy
         that monitors a token's exchange rate and swaps it once it rises
         to or above a threshold. Submit the resulting signature via
-        `POST /take-profit`.
+        `POST /take-profit/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -2754,7 +2470,6 @@ paths:
                 - wallet
                 - balanceBps
                 - slippageBps
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -2796,20 +2511,9 @@ paths:
                     - $ref: '#/components/schemas/Address'
                   description: >-
                     Address that receives the tokenOut. Defaults to `wallet`.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the take-profit strategy.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2821,7 +2525,7 @@ paths:
       description: Get the status of the take-profit strategy.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /take-profit`.
+          description: ID returned by `POST /take-profit/prepare`.
       responses:
         '200':
           description: Status of the take-profit strategy.
@@ -2856,18 +2560,17 @@ paths:
       tags:
         - Take profit
       description: >-
-        Submit the signature of the data obtained from `POST /take-
-        profit/{id}/stop/prepare` to stop the take-profit strategy. Once
-        stopped, `GET /take-profit/{id}` reports `status` as `stopped`.
+        Submit the signature of the data obtained from
+        `POST /take-profit/{id}/stop/prepare` to stop the take-profit strategy.
+        Once stopped, `GET /take-profit/{id}` reports `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /take-profit`.
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /take-profit/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/DeactivationSubmission'
+        $ref: '#/components/requestBodies/StopSignatureSubmission'
       responses:
         '200':
-          $ref: '#/components/responses/SignatureSubmitted'
+          $ref: '#/components/responses/StopSignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2875,7 +2578,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/NothingToStopConflict'
   /take-profit/{id}/stop/prepare:
     post:
       tags:
@@ -2885,32 +2588,34 @@ paths:
         Submit the resulting signature via `POST /take-profit/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /take-profit`.
+          description: ID returned by `POST /take-profit/prepare`.
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationPrepared'
+          $ref: '#/components/responses/StopPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /limit-order:
+  /limit-order/{id}/execute:
     post:
       tags:
         - Limit order
       description: >-
-        Submit the signature of the data obtained from
-        `POST /limit-order/prepare` to create the limit order that swaps a
-        fixed amount of tokenIn for tokenOut once the market rate reaches
-        or exceeds the requested limitRate. Track the execution via
-        `GET /limit-order/{id}`.
+        Submit the signature of the data obtained from `POST /limit-order/prepare`
+        to create the limit order that swaps a fixed amount of tokenIn for
+        tokenOut once the market rate reaches or exceeds the requested limitRate.
+        Call this before the `signBefore` deadline returned by
+        `POST /limit-order/prepare`. Past it the payload is no longer accepted.
+        Track the execution via `GET /limit-order/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /limit-order/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -2919,7 +2624,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /limit-order/prepare:
     post:
       tags:
@@ -2928,7 +2633,7 @@ paths:
         Computes EIP-712 data to be signed to create a limit order that
         swaps a fixed amount of tokenIn for tokenOut once the market rate
         reaches or exceeds the requested limitRate. Submit the resulting
-        signature via `POST /limit-order`.
+        signature via `POST /limit-order/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -2942,7 +2647,6 @@ paths:
                 - amount
                 - limitRate
                 - wallet
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -2983,20 +2687,9 @@ paths:
                   description: >-
                     Timestamp after which the order is cancelled if it
                     hasn't filled. Omit for no expiration.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: EIP-712 data to be signed to create the limit order.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3008,7 +2701,7 @@ paths:
       description: Get the status of the limit order.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /limit-order`.
+          description: ID returned by `POST /limit-order/prepare`.
       responses:
         '200':
           description: Status of the limit order.
@@ -3043,18 +2736,17 @@ paths:
       tags:
         - Limit order
       description: >-
-        Submit the signature of the data obtained from `POST /limit-
-        order/{id}/stop/prepare` to stop the limit order. Once stopped, `GET
-        /limit-order/{id}` reports `status` as `stopped`.
+        Submit the signature of the data obtained from
+        `POST /limit-order/{id}/stop/prepare` to stop the limit order. Once
+        stopped, `GET /limit-order/{id}` reports `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /limit-order`.
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /limit-order/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/DeactivationSubmission'
+        $ref: '#/components/requestBodies/StopSignatureSubmission'
       responses:
         '200':
-          $ref: '#/components/responses/SignatureSubmitted'
+          $ref: '#/components/responses/StopSignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3062,7 +2754,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/NothingToStopConflict'
   /limit-order/{id}/stop/prepare:
     post:
       tags:
@@ -3072,32 +2764,35 @@ paths:
         resulting signature via `POST /limit-order/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /limit-order`.
+          description: ID returned by `POST /limit-order/prepare`.
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationPrepared'
+          $ref: '#/components/responses/StopPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /portfolio-rebalancing:
+  /portfolio-rebalancing/{id}/execute:
     post:
       tags:
         - Portfolio rebalancing
       description: >-
         Submit the signature of the data obtained from
-        `POST /portfolio-rebalancing/prepare` to create the portfolio
-        rebalancing strategy that rebalances a portfolio to target token
-        allocations, either once or as a recurring strategy. Track the
-        execution via `GET /portfolio-rebalancing/{id}`.
+        `POST /portfolio-rebalancing/prepare` to create the portfolio rebalancing
+        strategy that rebalances a portfolio to target token allocations, either
+        once or as a recurring strategy. Call this before the `signBefore`
+        deadline returned by `POST /portfolio-rebalancing/prepare`. Past it the
+        payload is no longer accepted. Track the execution via
+        `GET /portfolio-rebalancing/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /portfolio-rebalancing/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -3106,7 +2801,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /portfolio-rebalancing/prepare:
     post:
       tags:
@@ -3114,7 +2809,7 @@ paths:
       description: >-
         Computes EIP-712 data to be signed to rebalance a portfolio to target
         token allocations, either once or as a recurring strategy. Submit
-        the resulting signature via `POST /portfolio-rebalancing`.
+        the resulting signature via `POST /portfolio-rebalancing/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -3126,7 +2821,6 @@ paths:
                 - allocations
                 - wallet
                 - slippageBps
-                - maxFeeUsd
               properties:
                 chain:
                   allOf:
@@ -3183,22 +2877,9 @@ paths:
                   description: >-
                     Timestamp after which the strategy stops executing. Only
                     relevant when `schedule` is set. Omit for no end date.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: >-
-            EIP-712 data to be signed to create the portfolio rebalancing
-            strategy.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3211,7 +2892,7 @@ paths:
         Get the status of the portfolio rebalancing strategy.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /portfolio-rebalancing`.
+          description: ID returned by `POST /portfolio-rebalancing/prepare`.
       responses:
         '200':
           description: >-
@@ -3267,19 +2948,18 @@ paths:
       tags:
         - Portfolio rebalancing
       description: >-
-        Submit the signature of the data obtained from `POST /portfolio-
-        rebalancing/{id}/stop/prepare` to stop the portfolio rebalancing
-        strategy. Once stopped, `GET /portfolio-rebalancing/{id}` reports
-        `status` as `stopped`.
+        Submit the signature of the data obtained from
+        `POST /portfolio-rebalancing/{id}/stop/prepare` to stop the portfolio
+        rebalancing strategy. Once stopped, `GET /portfolio-rebalancing/{id}`
+        reports `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /portfolio-rebalancing`.
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /portfolio-rebalancing/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/DeactivationSubmission'
+        $ref: '#/components/requestBodies/StopSignatureSubmission'
       responses:
         '200':
-          $ref: '#/components/responses/SignatureSubmitted'
+          $ref: '#/components/responses/StopSignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3287,43 +2967,46 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/NothingToStopConflict'
   /portfolio-rebalancing/{id}/stop/prepare:
     post:
       tags:
         - Portfolio rebalancing
       description: >-
         Computes EIP-712 data to be signed to stop the portfolio rebalancing
-        strategy. Submit the resulting signature via `POST /portfolio-
-        rebalancing/{id}/stop/execute`.
+        strategy. Submit the resulting signature via
+        `POST /portfolio-rebalancing/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /portfolio-rebalancing`.
+          description: ID returned by `POST /portfolio-rebalancing/prepare`.
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationPrepared'
+          $ref: '#/components/responses/StopPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /stablecoin-consolidation:
+  /stablecoin-consolidation/{id}/execute:
     post:
       tags:
         - Stablecoin consolidation
       description: >-
         Submit the signature of the data obtained from
         `POST /stablecoin-consolidation/prepare` to create the stablecoin
-        consolidation strategy that swaps all tokens above a given USD
-        threshold into a stablecoin, each swap in a separate transaction.
-        Track the execution via `GET /stablecoin-consolidation/{id}`.
+        consolidation strategy that swaps all tokens above a given USD threshold
+        into a stablecoin, each swap in a separate transaction. Call this before
+        the `signBefore` deadline returned by
+        `POST /stablecoin-consolidation/prepare`. Past it the payload is no longer
+        accepted. Track the execution via `GET /stablecoin-consolidation/{id}`.
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stablecoin-consolidation/prepare`.
       requestBody:
         $ref: '#/components/requestBodies/SignatureSubmission'
       responses:
-        '200':
+        '204':
           $ref: '#/components/responses/SignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -3332,7 +3015,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/SignatureConflict'
   /stablecoin-consolidation/prepare:
     post:
       tags:
@@ -3341,7 +3024,7 @@ paths:
         Computes EIP-712 data to be signed to swap all tokens above a given
         USD threshold into a stablecoin, each swap in a separate transaction.
         Submit the resulting signature via
-        `POST /stablecoin-consolidation`.
+        `POST /stablecoin-consolidation/{id}/execute`.
       requestBody:
         required: true
         content:
@@ -3354,7 +3037,6 @@ paths:
                 - minAmountUsd
                 - wallet
                 - slippageBps
-                - maxFeeUsd
               properties:
                 token:
                   type: string
@@ -3393,22 +3075,9 @@ paths:
                   description: >-
                     Timestamp after which the strategy stops executing. Only
                     relevant when `schedule` is set. Omit for no end date.
-                maxFeeUsd:
-                  $ref: '#/components/schemas/MaxFeeUsd'
       responses:
         '200':
-          description: >-
-            EIP-712 data to be signed to create the consolidation to
-            stablecoin strategy.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - signaturePayload
-                properties:
-                  signaturePayload:
-                    $ref: '#/components/schemas/TriggerSignaturePayload'
+          $ref: '#/components/responses/ActionPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3421,7 +3090,7 @@ paths:
         Get the status of the stablecoin consolidation strategy.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /stablecoin-consolidation`.
+          description: ID returned by `POST /stablecoin-consolidation/prepare`.
       responses:
         '200':
           description: >-
@@ -3441,19 +3110,18 @@ paths:
       tags:
         - Stablecoin consolidation
       description: >-
-        Submit the signature of the data obtained from `POST /stablecoin-
-        consolidation/{id}/stop/prepare` to stop the stablecoin consolidation
-        strategy. Once stopped, `GET /stablecoin-consolidation/{id}` reports
-        `status` as `stopped`.
+        Submit the signature of the data obtained from
+        `POST /stablecoin-consolidation/{id}/stop/prepare` to stop the
+        stablecoin consolidation strategy. Once stopped,
+        `GET /stablecoin-consolidation/{id}` reports `status` as `stopped`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /stablecoin-consolidation`.
-        - $ref: '#/components/parameters/IdempotencyKey'
+          description: ID returned by `POST /stablecoin-consolidation/prepare`.
       requestBody:
-        $ref: '#/components/requestBodies/DeactivationSubmission'
+        $ref: '#/components/requestBodies/StopSignatureSubmission'
       responses:
         '200':
-          $ref: '#/components/responses/SignatureSubmitted'
+          $ref: '#/components/responses/StopSignatureSubmitted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3461,7 +3129,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Conflict'
+          $ref: '#/components/responses/NothingToStopConflict'
   /stablecoin-consolidation/{id}/stop/prepare:
     post:
       tags:
@@ -3472,10 +3140,10 @@ paths:
         /stablecoin-consolidation/{id}/stop/execute`.
       parameters:
         - $ref: '#/components/parameters/ActionId'
-          description: ID returned by `POST /stablecoin-consolidation`.
+          description: ID returned by `POST /stablecoin-consolidation/prepare`.
       responses:
         '200':
-          $ref: '#/components/responses/DeactivationPrepared'
+          $ref: '#/components/responses/StopPrepared'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3488,7 +3156,7 @@ components:
       name: id
       in: path
       required: true
-      description: ID returned by `POST /{action}`.
+      description: ID returned by `POST /{action}/prepare`.
       schema:
         $ref: '#/components/schemas/UUID'
     IdempotencyKey:
@@ -3519,17 +3187,6 @@ components:
             properties:
               signature:
                 $ref: '#/components/schemas/TriggerSignature'
-    SignatureSubmissionWithApprovals:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - signature
-            properties:
-              signature:
-                $ref: '#/components/schemas/TriggerSignature'
               signedApprovals:
                 type: array
                 description: >-
@@ -3548,7 +3205,7 @@ components:
                   the request is rejected.
                 items:
                   $ref: '#/components/schemas/Signature'
-    DeactivationSubmission:
+    StopSignatureSubmission:
       required: true
       content:
         application/json:
@@ -3570,22 +3227,86 @@ components:
                 items:
                   $ref: '#/components/schemas/HexString'
   responses:
-    SignatureSubmitted:
-      description: Signature submitted.
+    ActionPrepared:
+      description: >-
+        EIP-712 data to be signed to create the action, along with the
+        approvals and safeguards it requires.
       content:
         application/json:
           schema:
             type: object
             required:
               - id
+              - signBefore
+              - signaturePayload
+              - executionCost
+              - requiredApprovals
+              - policies
             properties:
               id:
                 allOf:
                   - $ref: '#/components/schemas/UUID'
                 description: >-
-                  ID for this request, returned to track its status via
+                  ID for this action. Submit the signature via
+                  `POST /{action}/{id}/execute` and track its status via
                   `GET /{action}/{id}`.
-    DeactivationPrepared:
+              signBefore:
+                allOf:
+                  - $ref: '#/components/schemas/Timestamp'
+                description: >-
+                  Deadline for submitting the signature via
+                  `POST /{action}/{id}/execute`. Past it the payload is no
+                  longer accepted, and a fresh one must be requested from
+                  `POST /{action}/prepare`.
+              signaturePayload:
+                $ref: '#/components/schemas/TriggerSignaturePayload'
+              executionCost:
+                type: object
+                description: Estimated cost per execution for this action.
+                required:
+                  - estimatedUsdPerExecution
+                  - maxUsdPerExecution
+                properties:
+                  estimatedUsdPerExecution:
+                    type: string
+                    description: >-
+                      Estimated fee for each on-chain transaction, in USD,
+                      as a decimal string.
+                    example: '0.42'
+                  maxUsdPerExecution:
+                    allOf:
+                      - $ref: '#/components/schemas/MaxFeeUsd'
+                    description: >-
+                      The maximum fee applied per execution, derived from
+                      `estimatedUsdPerExecution`. If the fee of a given
+                      execution would exceed this value, that execution is
+                      skipped.
+                    example: '0.6'
+              requiredApprovals:
+                type: array
+                description: >-
+                  Raw `approve()` transactions authorizing the settler to
+                  spend the tokens this action moves, which must be signed
+                  and submitted alongside the action signature via
+                  `POST /{action}/{id}/execute`. Empty when no approvals are
+                  required.
+                items:
+                  $ref: '#/components/schemas/TransactionRequest'
+              policies:
+                type: array
+                description: >-
+                  EIP-712 payloads authorizing the safeguards that restrict
+                  what Mimic may do with this wallet. Each must be signed and
+                  submitted as `signedPolicies` via
+                  `POST /{action}/{id}/execute`. Empty when the wallet is
+                  already safeguarded.
+                items:
+                  $ref: '#/components/schemas/SafeguardSignaturePayload'
+    SignatureSubmitted:
+      description: >-
+        Signature submitted. Returned again when the same signature is
+        resubmitted for this `id`, so a retry is always safe.
+    StopPrepared:
       description: >-
         EIP-712 data to be signed to stop the strategy, and the transactions
         that remove the settler's allowance.
@@ -3612,7 +3333,7 @@ components:
                   executing.
                 items:
                   $ref: '#/components/schemas/TransactionRequest'
-    DeactivationSubmitted:
+    StopSignatureSubmitted:
       description: >-
         Signature submitted, with the outcome of any revocations that came
         with it.
@@ -3691,6 +3412,22 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    SignatureConflict:
+      description: >-
+        Conflict — a different signature was already submitted for this `id`,
+        or the signing window closed before this one arrived.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NothingToStopConflict:
+      description: >-
+        Conflict — the strategy has not been executed yet, so there is nothing
+        to stop.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
     Address:
       type: string
@@ -3711,8 +3448,9 @@ components:
       type: string
       format: uuid
       description: >-
-        Identifier for a submitted action request, returned by
-        `POST /{action}` and used to track its status.
+        Identifier for an action request, returned by
+        `POST /{action}/prepare` and used to submit its signature and track
+        its status.
       example: 550e8400-e29b-41d4-a716-446655440000
     ExternalId:
       type: string
@@ -4021,9 +3759,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/Address'
           description: >-
-            Address that receives the tokenOut. Must equal `wallet` while the
-            safeguard set by `policies` allows the wallet as the only swap
-            recipient. Defaults to `wallet` when omitted.
+            Address that receives the tokenOut. Defaults to `wallet`.
     DcaStrategy:
       description: A DCA strategy and its current status.
       allOf:
