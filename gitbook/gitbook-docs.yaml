@@ -6,7 +6,7 @@ site:
       key: section-1
       title: API Reference
       path: api-reference
-      description: Every endpoint, generated from the OpenAPI spec.
+      description: Every endpoint, with live request examples.
       icon: code
       default: true
       children:
