@@ -1303,6 +1303,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/SignatureConflict'
+  /lending-rebalancing:
+    get:
+      tags:
+        - Lending rebalancing
+      description: >-
+        List the lending rebalancing strategies created under the caller's account, optionally
+        filtered by wallet. Read a single one via `GET /lending-rebalancing/{id}` for its
+        full status.
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          description: Only return strategies for this wallet.
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of lending rebalancing strategies.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - strategies
+                properties:
+                  strategies:
+                    type: array
+                    description: >-
+                      Matching lending rebalancing strategies. Empty when the account has none, or
+                      none match `wallet`.
+                    items:
+                      $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /lending-rebalancing/prepare:
     post:
       tags:
@@ -1431,6 +1467,56 @@ paths:
                                   Current APY of the deposit's pool, in
                                   percent, as a decimal string.
                                 example: '4.85'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /lending-rebalancing/{id}/executions:
+    get:
+      tags:
+        - Lending rebalancing
+      description: Get the most recent executions of the lending rebalancing strategy.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /lending-rebalancing/prepare`.
+      responses:
+        '200':
+          description: Most recent executions of the lending rebalancing strategy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                properties:
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending.
+                    items:
+                      description: Status of a single execution of the strategy.
+                      allOf:
+                        - $ref: '#/components/schemas/ExecutionStatus'
+                        - type: object
+                          properties:
+                            costUsd:
+                              type: string
+                              description: >-
+                                Fee actually paid for this execution, in USD, as a
+                                decimal string. Omitted while `status` is `pending`.
+                              example: '0.41'
+                            protocol:
+                              type: string
+                              description: >-
+                                Lending protocol the deposit was moved into during
+                                this execution.
+                              enum:
+                                - aave
+                                - compound
+                                - morpho
+                                - spark
+                              example: aave
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1832,6 +1918,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/SignatureConflict'
+  /deposit-splitting:
+    get:
+      tags:
+        - Deposit splitting
+      description: >-
+        List the deposit splitting strategies created under the caller's account, optionally
+        filtered by wallet. Read a single one via `GET /deposit-splitting/{id}` for its
+        full status.
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          description: Only return strategies for this wallet.
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of deposit splitting strategies.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - strategies
+                properties:
+                  strategies:
+                    type: array
+                    description: >-
+                      Matching deposit splitting strategies. Empty when the account has none, or
+                      none match `wallet`.
+                    items:
+                      $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /deposit-splitting/prepare:
     post:
       tags:
@@ -1954,31 +2076,55 @@ paths:
                         description: Address of the created Safe wallet.
                       externalId:
                         $ref: '#/components/schemas/ExternalId'
-                      executions:
-                        type: array
-                        description: Most recent executions, ordered by timestamp descending.
-                        items:
-                          description: Status of a single execution of the strategy.
-                          allOf:
-                            - $ref: '#/components/schemas/ExecutionStatus'
-                            - type: object
-                              properties:
-                                transfers:
-                                  type: array
-                                  description: Amounts sent to each recipient during this execution.
-                                  items:
-                                    type: object
-                                    required:
-                                      - recipient
-                                      - amount
-                                    properties:
-                                      recipient:
-                                        allOf:
-                                          - $ref: '#/components/schemas/Address'
-                                      amount:
-                                        type: string
-                                        description: Amount sent to recipient, as a decimal string.
-                                        example: '10.3'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /deposit-splitting/{id}/executions:
+    get:
+      tags:
+        - Deposit splitting
+      description: Get the most recent executions of the deposit splitting strategy.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /deposit-splitting/prepare`.
+      responses:
+        '200':
+          description: Most recent executions of the deposit splitting strategy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                properties:
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending.
+                    items:
+                      description: Status of a single execution of the strategy.
+                      allOf:
+                        - $ref: '#/components/schemas/ExecutionStatus'
+                        - type: object
+                          properties:
+                            transfers:
+                              type: array
+                              description: Amounts sent to each recipient during this execution.
+                              items:
+                                type: object
+                                required:
+                                  - recipient
+                                  - amount
+                                properties:
+                                  recipient:
+                                    allOf:
+                                      - $ref: '#/components/schemas/Address'
+                                  amount:
+                                    type: string
+                                    description: Amount sent to recipient, as a decimal string.
+                                    example: '10.3'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2269,6 +2415,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/SignatureConflict'
+  /stop-loss:
+    get:
+      tags:
+        - Stop loss
+      description: >-
+        List the stop-loss strategies created under the caller's account, optionally
+        filtered by wallet. Read a single one via `GET /stop-loss/{id}` for its
+        full status.
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          description: Only return strategies for this wallet.
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of stop-loss strategies.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - strategies
+                properties:
+                  strategies:
+                    type: array
+                    description: >-
+                      Matching stop-loss strategies. Empty when the account has none, or
+                      none match `wallet`.
+                    items:
+                      $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /stop-loss/prepare:
     post:
       tags:
@@ -2377,6 +2559,35 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /stop-loss/{id}/executions:
+    get:
+      tags:
+        - Stop loss
+      description: Get the most recent executions of the stop-loss strategy.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stop-loss/prepare`.
+      responses:
+        '200':
+          description: Most recent executions of the stop-loss strategy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                properties:
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending.
+                    items:
+                      $ref: '#/components/schemas/StrategyExecution'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /stop-loss/{id}/stop/execute:
     post:
       tags:
@@ -2447,6 +2658,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/SignatureConflict'
+  /take-profit:
+    get:
+      tags:
+        - Take profit
+      description: >-
+        List the take-profit strategies created under the caller's account, optionally
+        filtered by wallet. Read a single one via `GET /take-profit/{id}` for its
+        full status.
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          description: Only return strategies for this wallet.
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of take-profit strategies.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - strategies
+                properties:
+                  strategies:
+                    type: array
+                    description: >-
+                      Matching take-profit strategies. Empty when the account has none, or
+                      none match `wallet`.
+                    items:
+                      $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /take-profit/prepare:
     post:
       tags:
@@ -2555,6 +2802,35 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /take-profit/{id}/executions:
+    get:
+      tags:
+        - Take profit
+      description: Get the most recent executions of the take-profit strategy.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /take-profit/prepare`.
+      responses:
+        '200':
+          description: Most recent executions of the take-profit strategy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                properties:
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending.
+                    items:
+                      $ref: '#/components/schemas/StrategyExecution'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /take-profit/{id}/stop/execute:
     post:
       tags:
@@ -2625,6 +2901,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/SignatureConflict'
+  /limit-order:
+    get:
+      tags:
+        - Limit order
+      description: >-
+        List the limit orders created under the caller's account, optionally
+        filtered by wallet. Read a single one via `GET /limit-order/{id}` for its
+        full status.
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          description: Only return strategies for this wallet.
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of limit orders.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - strategies
+                properties:
+                  strategies:
+                    type: array
+                    description: >-
+                      Matching limit orders. Empty when the account has none, or
+                      none match `wallet`.
+                    items:
+                      $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /limit-order/prepare:
     post:
       tags:
@@ -2731,6 +3043,35 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /limit-order/{id}/executions:
+    get:
+      tags:
+        - Limit order
+      description: Get the most recent executions of the limit order.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /limit-order/prepare`.
+      responses:
+        '200':
+          description: Most recent executions of the limit order.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                properties:
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending.
+                    items:
+                      $ref: '#/components/schemas/StrategyExecution'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /limit-order/{id}/stop/execute:
     post:
       tags:
@@ -2802,6 +3143,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/SignatureConflict'
+  /portfolio-rebalancing:
+    get:
+      tags:
+        - Portfolio rebalancing
+      description: >-
+        List the portfolio rebalancing strategies created under the caller's account, optionally
+        filtered by wallet. Read a single one via `GET /portfolio-rebalancing/{id}` for its
+        full status.
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          description: Only return strategies for this wallet.
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of portfolio rebalancing strategies.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - strategies
+                properties:
+                  strategies:
+                    type: array
+                    description: >-
+                      Matching portfolio rebalancing strategies. Empty when the account has none, or
+                      none match `wallet`.
+                    items:
+                      $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /portfolio-rebalancing/prepare:
     post:
       tags:
@@ -2943,6 +3320,35 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /portfolio-rebalancing/{id}/executions:
+    get:
+      tags:
+        - Portfolio rebalancing
+      description: Get the most recent executions of the portfolio rebalancing strategy.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /portfolio-rebalancing/prepare`.
+      responses:
+        '200':
+          description: Most recent executions of the portfolio rebalancing strategy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                properties:
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending.
+                    items:
+                      $ref: '#/components/schemas/StrategyExecution'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /portfolio-rebalancing/{id}/stop/execute:
     post:
       tags:
@@ -3016,6 +3422,42 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/SignatureConflict'
+  /stablecoin-consolidation:
+    get:
+      tags:
+        - Stablecoin consolidation
+      description: >-
+        List the stablecoin consolidation strategies created under the caller's account, optionally
+        filtered by wallet. Read a single one via `GET /stablecoin-consolidation/{id}` for its
+        full status.
+      parameters:
+        - name: wallet
+          in: query
+          required: false
+          description: Only return strategies for this wallet.
+          schema:
+            $ref: '#/components/schemas/Address'
+      responses:
+        '200':
+          description: List of stablecoin consolidation strategies.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - strategies
+                properties:
+                  strategies:
+                    type: array
+                    description: >-
+                      Matching stablecoin consolidation strategies. Empty when the account has none, or
+                      none match `wallet`.
+                    items:
+                      $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /stablecoin-consolidation/prepare:
     post:
       tags:
@@ -3099,6 +3541,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StrategyStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /stablecoin-consolidation/{id}/executions:
+    get:
+      tags:
+        - Stablecoin consolidation
+      description: Get the most recent executions of the stablecoin consolidation strategy.
+      parameters:
+        - $ref: '#/components/parameters/ActionId'
+          description: ID returned by `POST /stablecoin-consolidation/prepare`.
+      responses:
+        '200':
+          description: Most recent executions of the stablecoin consolidation strategy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - executions
+                properties:
+                  executions:
+                    type: array
+                    description: Most recent executions, ordered by timestamp descending.
+                    items:
+                      $ref: '#/components/schemas/StrategyExecution'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3654,6 +4125,7 @@ components:
       required:
         - id
         - status
+        - maxUsdPerExecution
       properties:
         id:
           allOf:
@@ -3692,6 +4164,13 @@ components:
             - $ref: '#/components/schemas/PortfolioSnapshot'
           description: >-
             Current balances and information relevant to this strategy.
+        maxUsdPerExecution:
+          allOf:
+            - $ref: '#/components/schemas/MaxFeeUsd'
+          description: >-
+            Maximum fee applied per execution, derived by
+            `POST /{action}/prepare`. An execution whose fee would exceed
+            this value is skipped.
     StrategyExecution:
       description: Status of a single execution of a recurring strategy.
       allOf:
@@ -3765,17 +4244,9 @@ components:
       allOf:
         - $ref: '#/components/schemas/StrategyStatus'
         - type: object
-          required:
-            - maxUsdPerExecution
           properties:
             inputs:
               $ref: '#/components/schemas/DcaInputs'
-            maxUsdPerExecution:
-              allOf:
-                - $ref: '#/components/schemas/MaxFeeUsd'
-              description: >-
-                Maximum fee applied per execution, derived by
-                `POST /dca/prepare`.
     Settler:
       type: object
       description: >-
