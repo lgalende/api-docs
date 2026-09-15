@@ -1,0 +1,13 @@
+# Agent skills installed by `npx skills add gitbookio/gitbook-skills`.
+# CLAUDE.md asks that these not be committed; re-run the command to restore them.
+.agents/
+.claude/
+skills-lock.json
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+.env
